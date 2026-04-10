@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StatDoctor – Locum Doctor Jobs Without Agencies</title>
+<meta name="description" content="Find locum doctor jobs directly with hospitals. No agencies. Download StatDoctor.">
+<link rel="canonical" href="https://statdoctor.app/landing">
+<meta property="og:type" content="website">
+<meta property="og:title" content="StatDoctor – Locum Doctor Jobs Without Agencies">
+<meta property="og:description" content="Find locum doctor jobs directly with hospitals. No agencies. Download StatDoctor.">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400;1,9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#E5E8F4;--fg:#1F2344;--card:#FFFFFF;--muted:#666B8F;
+  --lime:#A4D65E;--sd-blue:#1F3A6A;--navy:#1F2344;
+  --border:#C0C4D8;--destructive:#E53E3E;--lavender:#E5E8F4;
+}
+body{font-family:'DM Sans',sans-serif;background:#E5E8F4;color:#1a1d3b;-webkit-font-smoothing:antialiased}
+img{max-width:100%;height:auto}
+a{text-decoration:none;color:inherit}
+
+/* Layout */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+.container-sm{max-width:768px;margin:0 auto;padding:0 24px}
+.container-md{max-width:896px;margin:0 auto;padding:0 24px}
+.text-center{text-align:center}
+
+/* Sections */
+.section{padding:64px 24px}
+.section-lg{padding:80px 24px}
+.section-white{background:#FFFFFF}
+
+/* Typography */
+h1{font-size:2.5rem;font-weight:700;line-height:1.1;color:#1a1d3b}
+h2{font-size:1.875rem;font-weight:700;line-height:1.2;color:#1a1d3b}
+h3{color:#1a1d3b}
+.text-sd-blue{color:#1F3A6A}
+.italic{font-style:italic}
+.text-muted{color:#555A7A}
+.text-sm{font-size:0.875rem}
+.text-xs{font-size:0.75rem}
+.text-lg{font-size:1.125rem}
+.font-semibold{font-weight:600}
+.font-medium{font-weight:500}
+
+/* Buttons */
+.btn{display:inline-block;padding:16px 32px;border-radius:9999px;font-weight:700;font-size:1.125rem;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.2s;border:none;text-align:center}
+.btn-primary{background:#A4D65E;color:#1a1d3b}
+.btn-primary:hover{filter:brightness(0.95);transform:scale(1.02)}
+.btn-outline{background:transparent;color:#1a1d3b;border:2px solid #C0C4D8}
+.btn-outline:hover{background:rgba(0,0,0,0.03)}
+.btn-nav{background:#1a1d3b;color:#E5E8F4;padding:12px 24px;font-size:1rem}
+.btn-sm{padding:10px 20px;font-size:0.875rem}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1fr;gap:32px}
+.grid-3{display:grid;grid-template-columns:1fr;gap:20px}
+.grid-2x2{display:grid;grid-template-columns:1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+
+/* Cards */
+.card{background:#FFFFFF;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
+.card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.card-flat{background:#E5E8F4;border-radius:12px;padding:12px;display:flex;align-items:center;gap:12px}
+
+/* Flex */
+.flex{display:flex}.flex-wrap{flex-wrap:wrap}.items-center{align-items:center}
+.justify-between{justify-content:space-between}.justify-center{justify-content:center}
+.gap-3{gap:12px}.gap-4{gap:16px}.gap-5{gap:20px}
+.flex-col{flex-direction:column}
+
+/* Utilities */
+.mx-auto{margin-left:auto;margin-right:auto}
+.mb-3{margin-bottom:12px}.mb-4{margin-bottom:16px}.mb-5{margin-bottom:20px}
+.mb-6{margin-bottom:24px}.mb-8{margin-bottom:32px}.mb-10{margin-bottom:40px}
+.mb-12{margin-bottom:48px}.mb-14{margin-bottom:56px}
+.mt-4{margin-top:16px}.mt-6{margin-top:24px}.mt-14{margin-top:56px}
+.max-w-lg{max-width:512px}.max-w-xl{max-width:576px}.max-w-md{max-width:448px}
+.shrink-0{flex-shrink:0}
+.hidden{display:none}
+
+/* Nav */
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:40px;padding-top:24px}
+.nav-logo{height:32px}
+.nav-right{display:none;align-items:center;gap:12px}
+
+/* Hero */
+.hero-grid{display:grid;grid-template-columns:1fr;gap:32px;align-items:center}
+.hero-img{width:256px;border-radius:24px;filter:drop-shadow(0 25px 50px rgba(0,0,0,0.15));margin:0 auto;display:block}
+
+/* App Store badges */
+.store-badges{display:flex;align-items:center;gap:12px}
+.store-badge{height:44px;width:auto;transition:transform 0.2s}
+.store-badge:hover{transform:scale(1.05)}
+
+/* Icon box */
+.icon-box{width:32px;height:32px;color:var(--sd-blue);flex-shrink:0}
+.icon-box-lg{width:64px;height:64px;border-radius:16px;background:rgba(31,58,106,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+
+/* Problem section */
+.problem-item{display:flex;align-items:center;gap:12px;background:#FFFFFF;border-radius:12px;padding:16px;text-align:left}
+.problem-icon{width:20px;height:20px;color:#E53E3E;flex-shrink:0}
+.fix-badge{display:inline-flex;align-items:center;gap:8px;background:#A4D65E;color:#1a1d3b;padding:12px 24px;border-radius:9999px;font-weight:600;font-size:1.125rem}
+
+/* Testimonial */
+.testimonial-avatar{width:40px;height:40px;border-radius:50%;object-fit:cover}
+
+/* Carousel */
+.carousel-wrap{position:relative;max-width:896px;margin:0 auto;overflow:hidden}
+.carousel-track{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:16px 0}
+.carousel-track::-webkit-scrollbar{display:none}
+.carousel-slide{flex:0 0 55%;scroll-snap-align:center;min-width:0}
+.carousel-slide img{border-radius:2rem;border:3px solid rgba(31,35,68,0.1);width:100%;box-shadow:0 4px 20px rgba(0,0,0,0.1)}
+.carousel-nav{display:flex;justify-content:center;gap:6px;margin-top:24px}
+.carousel-dot{width:8px;height:8px;border-radius:9999px;background:rgba(102,107,143,0.3);border:none;cursor:pointer;padding:0}
+.carousel-dot.active{width:20px;background:var(--sd-blue)}
+
+/* Steps */
+.step-card{text-align:center}
+.step-num{font-size:0.75rem;font-weight:700;color:var(--sd-blue);text-transform:uppercase;letter-spacing:0.1em}
+.step-title{font-weight:600;margin-top:4px}
+
+/* SVG icons inline */
+.svg-icon{display:inline-block;vertical-align:middle}
+
+/* Footer */
+.footer{text-align:center;margin-top:64px;font-size:0.75rem;color:#555A7A}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.animate{opacity:0;transform:translateY(20px);transition:opacity 0.6s ease-out,transform 0.6s ease-out}
+.animate.visible{opacity:1!important;transform:translateY(0)!important}
+.no-anim{opacity:1!important;transform:none!important}
+.delay-1{transition-delay:0.1s}.delay-2{transition-delay:0.2s}.delay-3{transition-delay:0.3s}
+.delay-4{transition-delay:0.4s}.delay-5{transition-delay:0.5s}
+
+/* Responsive */
+@media(min-width:640px){
+  .grid-2x2{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:repeat(2,1fr)}
+  .carousel-slide{flex:0 0 35%}
+}
+@media(min-width:768px){
+  h1{font-size:3.75rem}
+  h2{font-size:2.25rem}
+  .section{padding:80px 24px}
+  .section-lg{padding:96px 24px}
+  .hero-grid{grid-template-columns:1fr 1fr}
+  .hero-img{width:320px}
+  .nav-right{display:flex}
+  .nav-logo{height:40px}
+  .nav{margin-bottom:64px;padding-top:40px}
+  .grid-3{grid-template-columns:repeat(3,1fr)}
+  .grid-4{grid-template-columns:repeat(4,1fr)}
+  .carousel-slide{flex:0 0 25%}
+  .btn-mobile-only{display:none}
+}
+@media(min-width:1024px){
+  h1{font-size:3.75rem}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== SECTION 1: HERO ===== -->
+<section class="section" style="padding-bottom:48px">
+<div class="container">
+  <!-- Nav -->
+  <nav class="nav">
+    <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6890a03498323d7b7c29d34e_statdoc_logo.svg" alt="StatDoctor logo" class="nav-logo">
+    <a href="https://stan.store/statdoctor" target="_blank" rel="noopener noreferrer" class="btn btn-nav btn-mobile-only">Locum Bible</a>
+    <div class="nav-right">
+      <a href="https://statdoctor.app/" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">Learn More</a>
+      <a href="https://linktr.ee/statdoctorau" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Download App</a>
+    </div>
+  </nav>
+
+  <!-- Hero Content -->
+  <div class="hero-grid">
+    <div class="no-anim">
+      <h1 style="margin-bottom:20px">
+        Find Locum Shifts <span class="text-sd-blue italic">Without Agencies</span>
+      </h1>
+      <p class="text-lg text-muted" style="margin-bottom:32px;max-width:512px">
+        StatDoctor connects doctors directly with hospitals.<br>Simple, transparent locum work.
+      </p>
+      <div class="flex flex-wrap gap-4 mb-6">
+        <a href="https://linktr.ee/statdoctorau" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Download the App</a>
+        <a href="https://statdoctor.app/" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Learn More &rarr;</a>
+      </div>
+      <div class="store-badges mb-4">
+        <a href="https://apps.apple.com/au/app/statdoctor/id6452677138" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d2a1d41210a78792018_pngegg%20(2).png" alt="Download on the App Store" class="store-badge">
+        </a>
+        <a href="https://play.google.com/store/apps/details?id=user.statdoctor.app&hl=en_AU" target="_blank" rel="noopener noreferrer">
+          <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d1e7e5d4077dcdbc6e7_pngegg%20(1).png" alt="Get it on Google Play" class="store-badge">
+        </a>
+      </div>
+      <p class="text-sm text-muted">Join 200+ doctors across Australia</p>
+    </div>
+    <div class="no-anim" style="text-align:center">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6978a9ce554cc87a581ec18d_mobile-screen.webp" alt="StatDoctor mobile app showing locum shifts across Australia" class="hero-img">
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== SECTION 2: VALUE PROPS ===== -->
+<section class="section">
+<div class="container">
+  <h2 class="text-center mb-12">
+    Why Doctors Use <span class="text-sd-blue italic">StatDoctor</span>
+  </h2>
+  <div class="grid-3" style="max-width:896px;margin:0 auto">
+    <div class="card">
+      <svg class="icon-box mb-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <h3 class="font-semibold text-lg mb-3" style="font-size:1.125rem">Higher rates</h3>
+      <p class="text-sm text-muted">No agency commissions</p>
+    </div>
+    <div class="card">
+      <svg class="icon-box mb-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 21h18M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3l2-4h14l2 4"/><path d="M5 21V10.87M19 21V10.87"/></svg>
+      <h3 class="font-semibold text-lg mb-3" style="font-size:1.125rem">Direct hospital contact</h3>
+      <p class="text-sm text-muted">No agency contracts</p>
+    </div>
+    <div class="card">
+      <svg class="icon-box mb-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      <h3 class="font-semibold text-lg mb-3" style="font-size:1.125rem">Transparent shift details</h3>
+      <p class="text-sm text-muted">Know the rate and conditions upfront</p>
+    </div>
+    <div class="card">
+      <svg class="icon-box mb-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <h3 class="font-semibold text-lg mb-3" style="font-size:1.125rem">Locum community</h3>
+      <p class="text-sm text-muted">Connect with other locum doctors and share advice</p>
+    </div>
+    <div class="card">
+      <svg class="icon-box mb-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <h3 class="font-semibold text-lg mb-3" style="font-size:1.125rem">Real hospital insights</h3>
+      <p class="text-sm text-muted">See reviews and experiences from other locums</p>
+    </div>
+    <div class="card">
+      <svg class="icon-box mb-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3"/><path d="M8 15v1a6 6 0 0 0 6 6h.7"/><path d="M18 22l4-4"/><path d="M18 18l4 4"/></svg>
+      <h3 class="font-semibold text-lg mb-3" style="font-size:1.125rem">Built by a locum doctor</h3>
+      <p class="text-sm text-muted">Designed for real workflows</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== SECTION 3: COMMUNITY ===== -->
+<section class="section section-white">
+<div class="container-sm text-center">
+  <h2 class="mb-4">
+    More Than Just <span class="text-sd-blue italic">Shifts</span>
+  </h2>
+  <p class="text-lg text-muted mb-10 max-w-xl mx-auto">
+    StatDoctor is also a community of locum doctors sharing real experiences.
+  </p>
+  <div class="grid-2x2" style="max-width:512px;margin:0 auto;text-align:left">
+    <div class="card-flat">
+      <svg width="20" height="20" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="shrink-0"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="text-sm font-medium">Learn from other locums</span>
+    </div>
+    <div class="card-flat">
+      <svg width="20" height="20" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="shrink-0"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0 1 12 2.944a11.955 11.955 0 0 1-8.618 3.04A12.02 12.02 0 0 0 3 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+      <span class="text-sm font-medium">Other locum reviews</span>
+    </div>
+    <div class="card-flat">
+      <svg width="20" height="20" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="shrink-0"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+      <span class="text-sm font-medium">Avoid bad placements</span>
+    </div>
+    <div class="card-flat">
+      <svg width="20" height="20" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="shrink-0"><path d="M9 18h6M10 22h4M12 2v1M4.2 4.2l.7.7M1 12h1M4.2 19.8l.7-.7M20.5 4.9l-.7.7M23 12h-1M19.8 19.8l-.7-.7"/><circle cx="12" cy="12" r="4"/></svg>
+      <span class="text-sm font-medium">Share advice and tips</span>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== SECTION 4: PROBLEM ===== -->
+<section class="section">
+<div class="container-sm text-center">
+  <h2 class="mb-10">
+    Locum Work is Still <span class="text-sd-blue italic">Stuck in the Past</span>
+  </h2>
+  <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:40px">
+    <div class="problem-item">
+      <svg class="problem-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span class="text-sm font-medium">Agencies control communication</span>
+    </div>
+    <div class="problem-item">
+      <svg class="problem-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span class="text-sm font-medium">Endless emails and calls</span>
+    </div>
+    <div class="problem-item">
+      <svg class="problem-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span class="text-sm font-medium">Hidden conditions</span>
+    </div>
+    <div class="problem-item">
+      <svg class="problem-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span class="text-sm font-medium">Hard to compare jobs</span>
+    </div>
+    <div class="problem-item">
+      <svg class="problem-icon" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      <span class="text-sm font-medium">No reliable hospital feedback</span>
+    </div>
+  </div>
+  <div class="animate">
+    <span class="fix-badge">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      StatDoctor fixes this.
+    </span>
+  </div>
+</div>
+</section>
+
+<!-- ===== SECTION 5: HOW IT WORKS ===== -->
+<section class="section section-white">
+<div class="container">
+  <h2 class="text-center mb-12">
+    How StatDoctor <span class="text-sd-blue italic">Works</span>
+  </h2>
+  <div class="grid-4" style="max-width:768px;margin:0 auto 56px">
+    <div class="step-card">
+      <div class="icon-box-lg">
+        <svg width="28" height="28" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      </div>
+      <span class="step-num">01</span>
+      <p class="step-title">Download the app</p>
+    </div>
+    <div class="step-card">
+      <div class="icon-box-lg">
+        <svg width="28" height="28" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      </div>
+      <span class="step-num">02</span>
+      <p class="step-title">Create a free account</p>
+    </div>
+    <div class="step-card">
+      <div class="icon-box-lg">
+        <svg width="28" height="28" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      </div>
+      <span class="step-num">03</span>
+      <p class="step-title">Browse shifts</p>
+    </div>
+    <div class="step-card">
+      <div class="icon-box-lg">
+        <svg width="28" height="28" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </div>
+      <span class="step-num">04</span>
+      <p class="step-title">Apply directly</p>
+    </div>
+  </div>
+
+  <!-- Phone Screenshot Carousel -->
+  <div class="carousel-wrap">
+    <div class="carousel-track" id="carouselTrack">
+      <div class="carousel-slide"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68f854a01512ad140fcff8bd_statdoctor_jobpostings-04.png" alt="Browse shifts in list view" loading="lazy"></div>
+      <div class="carousel-slide"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68f854a0025b5b06ac9fbbe6_statdoctor_jobpostings-03.png" alt="Browse shifts in grid view" loading="lazy"></div>
+      <div class="carousel-slide"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68f8549f2f57198f9620470d_statdoctor_jobpostings-06.png" alt="Map view of available shifts" loading="lazy"></div>
+      <div class="carousel-slide"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68f8549f6ee6d4ef77dc06ec_statdoctor_jobpostings-05.png" alt="Hospital details and overview" loading="lazy"></div>
+      <div class="carousel-slide"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a8289d11e027a8880790c5_Phone%20app%20screens%20for%20website.png" alt="Hospital reviews and ratings" loading="lazy"></div>
+      <div class="carousel-slide"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a82b47bed816d12bad8eab_Phone%20app%20screens%20for%20website%20(1).png" alt="Shift calendar view" loading="lazy"></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== SECTION 6: TESTIMONIALS ===== -->
+<section class="section">
+<div class="container">
+  <div class="text-center mb-12">
+    <h2 class="mb-3">Why Our Doctors <span class="text-sd-blue">&#10084;&#65039;</span> Us</h2>
+    <p class="text-muted">Built by Australian locum doctors &middot; Used by hospitals across Australia</p>
+  </div>
+  <div class="grid-2x2" style="max-width:768px;margin:0 auto;gap:20px">
+    <!-- Dr Brian Rose -->
+    <div class="card">
+      <svg width="24" height="24" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="mb-3"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"/></svg>
+      <p class="text-sm text-muted mb-4" style="line-height:1.6;font-style:italic">"StatDoctor enables me to see all available shifts on my own device, on my own terms. No annoying phone calls. It's the stress-free approach to locuming."</p>
+      <div class="flex items-center gap-3">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a105632dceffa4f8933daf_Screenshot%202026-02-27%20at%2012.45.10%20pm.png" alt="Dr Brian Rose" class="testimonial-avatar">
+        <div>
+          <p class="text-sm font-semibold">Dr Brian Rose</p>
+          <p class="text-xs text-muted">MD, HMO</p>
+        </div>
+      </div>
+    </div>
+    <!-- Dr Marillo -->
+    <div class="card">
+      <svg width="24" height="24" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="mb-3"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"/></svg>
+      <p class="text-sm text-muted mb-4" style="line-height:1.6;font-style:italic">"Such an easy-to-use platform that gives locum doctors more control of their shifts."</p>
+      <div class="flex items-center gap-3">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697b6440a3f19ada5550b8b8_1702447089847.jpeg" alt="Dr Marillo Jayasuriya" class="testimonial-avatar">
+        <div>
+          <p class="text-sm font-semibold">Dr Marillo Jayasuriya</p>
+          <p class="text-xs text-muted">MD, FACEM</p>
+        </div>
+      </div>
+    </div>
+    <!-- Dr Layth -->
+    <div class="card">
+      <svg width="24" height="24" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="mb-3"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"/></svg>
+      <p class="text-sm text-muted mb-4" style="line-height:1.6;font-style:italic">"A great initiative to help doctors be in charge of their own work-life balance with the ease of picking up shifts on demand."</p>
+      <div class="flex items-center gap-3">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697828648e6bd8e828e91b1c_statdocto_doctors_available-07-03.png" alt="Dr Layth Samari" class="testimonial-avatar">
+        <div>
+          <p class="text-sm font-semibold">Dr Layth Samari</p>
+          <p class="text-xs text-muted">MD, ACEM Trainee</p>
+        </div>
+      </div>
+    </div>
+    <!-- Dr Greeshma -->
+    <div class="card">
+      <svg width="24" height="24" fill="none" stroke="var(--sd-blue)" stroke-width="2" viewBox="0 0 24 24" class="mb-3"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V21z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3z"/></svg>
+      <p class="text-sm text-muted mb-4" style="line-height:1.6;font-style:italic">"The whole process was extremely easy and straightforward! It's transparent with no hidden T&amp;C unlike many agencies. Truly a game changer for locum doctors."</p>
+      <div class="flex items-center gap-3">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6978195af46d2753c3e3422d_Adobe%20Express%20-%20file%20(26).png" alt="Dr Greeshma Gopakumar" class="testimonial-avatar">
+        <div>
+          <p class="text-sm font-semibold">Dr Greeshma Gopakumar</p>
+          <p class="text-xs text-muted">MD, HMO</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== SECTION 7: FINAL CTA ===== -->
+<section class="section-lg section-white">
+<div class="container text-center">
+  <div class="animate">
+    <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6890a03498323d7b7c29d34e_statdoc_logo.svg" alt="StatDoctor" style="height:32px;margin:0 auto 24px">
+    <h2 class="mb-4">
+      Start Locuming <span class="text-sd-blue italic">Smarter</span>
+    </h2>
+    <p class="text-muted mb-8 max-w-md mx-auto">
+      Join 200+ doctors already finding shifts without agencies.
+    </p>
+    <div class="flex flex-wrap justify-center gap-4 mb-6">
+      <a href="https://linktr.ee/statdoctorau" target="_blank" rel="noopener noreferrer" class="btn btn-primary">Download the App</a>
+      <a href="https://statdoctor.app/" target="_blank" rel="noopener noreferrer" class="btn btn-outline">Learn More &rarr;</a>
+    </div>
+    <div class="store-badges justify-center" style="display:flex;justify-content:center">
+      <a href="https://apps.apple.com/au/app/statdoctor/id6452677138" target="_blank" rel="noopener noreferrer">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d2a1d41210a78792018_pngegg%20(2).png" alt="Download on the App Store" class="store-badge">
+      </a>
+      <a href="https://play.google.com/store/apps/details?id=user.statdoctor.app&hl=en_AU" target="_blank" rel="noopener noreferrer">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d1e7e5d4077dcdbc6e7_pngegg%20(1).png" alt="Get it on Google Play" class="store-badge">
+      </a>
+    </div>
+  </div>
+</div>
+<footer class="footer">
+  &copy; 2026 StatDoctor. All rights reserved.
+</footer>
+</section>
+
+<!-- Scroll Animation Script -->
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const observer=new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}})
+  },{threshold:0.05});
+  document.querySelectorAll('.animate').forEach(el=>observer.observe(el));
+});
+</script>
+
+</body>
+</html>

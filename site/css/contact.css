@@ -1,0 +1,161 @@
+/* =============================================
+   StatDoctor — Contact Page
+   ============================================= */
+
+.contact-hero {
+  padding-top: calc(var(--nav-height) + var(--space-16));
+  padding-bottom: var(--space-16);
+}
+
+.contact-hero h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h1);
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+.contact-hero h1 em {
+  font-style: italic;
+  color: var(--ocean);
+}
+
+.contact-hero .subtitle {
+  text-align: center;
+  font-size: var(--text-lg);
+  color: var(--muted);
+  max-width: 600px;
+  margin: 0 auto var(--space-12);
+  line-height: var(--leading-normal);
+}
+
+/* ---- Two-column grid ---- */
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+/* ---- Form card ---- */
+
+.contact-form-card {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+}
+
+.form-group {
+  margin-bottom: var(--space-5);
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.contact-form-card .btn {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+/* ---- Info card (dark) ---- */
+
+.contact-info-card {
+  background: var(--gradient-hero);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  color: #fff;
+}
+
+.contact-info-card h3 {
+  font-family: var(--font-display);
+  color: #fff;
+  margin-bottom: var(--space-6);
+}
+
+.contact-info-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.contact-info-item svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.contact-info-item a {
+  color: #fff;
+  font-size: var(--text-base);
+  text-decoration: none;
+}
+
+.contact-info-item a:hover {
+  color: var(--electric);
+}
+
+/* ---- Social card ---- */
+
+.contact-social-card {
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  margin-top: var(--space-6);
+}
+
+.contact-social-card h3 {
+  font-family: var(--font-display);
+  margin-bottom: var(--space-5);
+}
+
+.social-links {
+  display: flex;
+  gap: var(--space-4);
+}
+
+.social-circle {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--subtle);
+  border-radius: 50%;
+  color: var(--ocean);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.social-circle:hover {
+  background: var(--ocean);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 768px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .contact-hero h1 {
+    font-size: var(--text-h2);
+  }
+}

@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StatDoctor — Find and Book Locum Shifts</title>
+<meta name="description" content="Australia's 1st locum doctor marketplace. Connect directly with hospitals and clinics. No agencies, no hidden fees.">
+<link rel="icon" href="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6890a03498323d7b7c29d34e_statdoc_logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/reset.css">
+<link rel="stylesheet" href="css/global.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/animations.css">
+<link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+
+<!-- ===== NAVIGATION ===== -->
+<header id="site-nav" class="nav-dark"></header>
+
+<!-- ===== 1. HERO ===== -->
+<section class="section-hero hero">
+<div class="container">
+  <div class="hero-grid">
+    <div class="hero-content">
+      <div class="hero-label">Australia's 1st Locum Doctor Marketplace</div>
+      <h1 class="hero-headline">The smarter way to <em>locum.</em></h1>
+      <p class="hero-sub">Connect directly with hospitals and clinics. No agencies, no hidden fees, no buy-out clauses.</p>
+      <div class="hero-actions">
+        <a href="https://linktr.ee/statdoctorau" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">Download the App</a>
+        <a href="find-doctors.html" class="btn btn-outline-white">I'm a Hospital</a>
+      </div>
+      <div class="hero-stores mb-8">
+        <a href="https://apps.apple.com/au/app/statdoctor/id6452677138" target="_blank" rel="noopener"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d2a1d41210a78792018_pngegg%20(2).png" alt="App Store"></a>
+        <a href="https://play.google.com/store/apps/details?id=user.statdoctor.app&hl=en_AU" target="_blank" rel="noopener"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d1e7e5d4077dcdbc6e7_pngegg%20(1).png" alt="Google Play"></a>
+      </div>
+      <div class="hero-proof">
+        <div class="hero-avatars">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="14" fill="#3b3d5c"/><circle cx="14" cy="11" r="4.5" fill="#8b8fa8"/><path d="M5 24.5c0-5 4-9 9-9s9 4 9 9" fill="#8b8fa8"/></svg>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="14" fill="#2d4a5c"/><circle cx="14" cy="11" r="4.5" fill="#7fa8b8"/><path d="M5 24.5c0-5 4-9 9-9s9 4 9 9" fill="#7fa8b8"/></svg>
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="14" fill="#3d3b5c"/><circle cx="14" cy="11" r="4.5" fill="#9b8fa8"/><path d="M5 24.5c0-5 4-9 9-9s9 4 9 9" fill="#9b8fa8"/></svg>
+        </div>
+        <span>300+ doctors</span>
+        <span class="hero-proof-divider"></span>
+        <span>60+ partner clinics</span>
+        <span class="hero-proof-divider"></span>
+        <span>5&#9733; App Store rating</span>
+      </div>
+    </div>
+    <div class="hero-visual hero-phone">
+      <div class="hero-glow glow-effect"></div>
+      <div class="hero-phone-wrapper">
+        <img src="img/phone-browse-grid.png" alt="StatDoctor app — Browse shifts" class="hero-phone-img active">
+        <img src="img/phone-browse-list.png" alt="StatDoctor app — Shift list" class="hero-phone-img">
+        <img src="img/phone-map.png" alt="StatDoctor app — Map view" class="hero-phone-img">
+        <img src="img/phone-hospital.png" alt="StatDoctor app — Hospital profile" class="hero-phone-img">
+        <img src="img/phone-calendar.png" alt="StatDoctor app — Calendar" class="hero-phone-img">
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 2. LOGO MARQUEE ===== -->
+<section class="marquee-section">
+  <p class="marquee-label">Trusted by 60+ healthcare facilities across Australia</p>
+  <div class="marquee-container">
+    <div class="marquee-track">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c5f64ac3ee08b11eea1_1.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6b34e627a6c618835f_16.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891b90e4261c120b064cabc_Group%201799.svg" alt="PEHA" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891b2ca97d3296f92eecdb3_Group%201797.svg" alt="HEAL" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891b9bdc8ce83d0d774d6a0_Group%201795.svg" alt="Portland" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6989187d91bc7a590978853b_Hospital%20Logos%20(100%20x%20100%20px).png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c60a412a0902b515580_3.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c6022354c21182e964e_5.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697c24083cb29d7af761cd8f_brhs.png" alt="BRHS" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697c31849389b03bf00674df_Myfast%20medical%20Logo.png" alt="Myfast" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6bd66a38e7ecd9a248_17.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6b8e767399e5f8ad70_4.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6b3669db9b3f9723e2_15.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c60ce7a24ba9a0ccdb2_8.png" alt="Hospital" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c600438353e2a7d2905_9.png" alt="Hospital" loading="lazy">
+      <!-- Duplicate for seamless loop -->
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c5f64ac3ee08b11eea1_1.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6b34e627a6c618835f_16.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891b90e4261c120b064cabc_Group%201799.svg" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891b2ca97d3296f92eecdb3_Group%201797.svg" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891b9bdc8ce83d0d774d6a0_Group%201795.svg" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6989187d91bc7a590978853b_Hospital%20Logos%20(100%20x%20100%20px).png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c60a412a0902b515580_3.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c6022354c21182e964e_5.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697c24083cb29d7af761cd8f_brhs.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697c31849389b03bf00674df_Myfast%20medical%20Logo.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6bd66a38e7ecd9a248_17.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6b8e767399e5f8ad70_4.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69a79f6b3669db9b3f9723e2_15.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c60ce7a24ba9a0ccdb2_8.png" alt="" loading="lazy">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/69891c600438353e2a7d2905_9.png" alt="" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3. BENTO GRID ===== -->
+<section>
+<div class="container">
+  <div class="text-center mb-16 reveal-scroll">
+    <h2>Why <em>StatDoctor?</em></h2>
+  </div>
+  <div class="bento-grid stagger">
+
+    <!-- LARGE: Earn more — pricing comparison -->
+    <div class="bento-card bento-large bento-dark bento-pricing reveal-scroll">
+      <div class="bento-pricing-content">
+        <h3>Earn more, keep more.</h3>
+        <p>Agencies take a cut from hospitals — meaning less reaches you. With StatDoctor, hospitals pay less and you earn more.</p>
+      </div>
+      <div class="bento-pricing-compare">
+        <div class="pricing-option pricing-agency">
+          <span class="pricing-label">Through an agency</span>
+          <span class="pricing-amount pricing-amount--dim">$2,500<span class="pricing-per">/shift</span></span>
+          <div class="pricing-bar">
+            <div class="pricing-bar-fill pricing-bar--agency"></div>
+          </div>
+        </div>
+        <div class="pricing-option pricing-sd">
+          <span class="pricing-label">Through StatDoctor</span>
+          <span class="pricing-amount pricing-amount--bright">$3,000<span class="pricing-per">/shift</span></span>
+          <div class="pricing-bar">
+            <div class="pricing-bar-fill pricing-bar--sd"></div>
+          </div>
+          <span class="pricing-badge">+$500 more</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMALL: Book in seconds -->
+    <div class="bento-card bento-elevated reveal-scroll">
+      <div class="bento-icon bento-icon--blue">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg>
+      </div>
+      <h3>Book in seconds.</h3>
+      <p>Apply with a tap. No paperwork, no phone calls, no waiting on hold with an agency.</p>
+    </div>
+
+    <!-- SMALL: Your schedule -->
+    <div class="bento-card bento-elevated reveal-scroll">
+      <div class="bento-icon bento-icon--green">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/></svg>
+      </div>
+      <h3>Your schedule, your rules.</h3>
+      <p>Choose when, where, and how often you work. Full-time locum or supplementing your role — it's your call.</p>
+    </div>
+
+    <!-- SMALL: No contracts -->
+    <div class="bento-card bento-elevated reveal-scroll">
+      <div class="bento-icon bento-icon--purple">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+      </div>
+      <h3>No rigid contracts.</h3>
+      <p>No lock-in periods, no buy-out clauses. Work freely without hidden penalties.</p>
+    </div>
+
+    <!-- SMALL: Get paid fast -->
+    <div class="bento-card bento-elevated reveal-scroll">
+      <div class="bento-icon" style="background: rgba(234,179,8,0.12); color: #ca8a04;">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      </div>
+      <h3>Get paid fast.</h3>
+      <p>No chasing invoices. Payments are processed quickly so you can focus on what matters — patient care.</p>
+    </div>
+
+    <!-- LARGE: Cut out the middleman -->
+    <div class="bento-card bento-large bento-dark bento-middleman reveal-scroll">
+      <div class="bento-middleman-content">
+        <h3>Cut out the middleman.</h3>
+        <p>Traditional agencies take a cut from both sides. StatDoctor charges hospitals a flat $99 per completed shift. Doctors pay nothing. Ever.</p>
+      </div>
+      <div class="bento-middleman-visual">
+        <div class="middleman-flow">
+          <div class="flow-node flow-node--hospital">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3 0h.008v.008H18V7.5z"/></svg>
+            <span>Hospital</span>
+          </div>
+          <div class="flow-arrow">
+            <svg width="40" height="12" viewBox="0 0 40 12"><path d="M0 6h34m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="flow-node flow-node--sd">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+            <span>StatDoctor</span>
+          </div>
+          <div class="flow-arrow">
+            <svg width="40" height="12" viewBox="0 0 40 12"><path d="M0 6h34m0 0l-5-5m5 5l-5 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="flow-node flow-node--doctor">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+            <span>Doctor</span>
+          </div>
+        </div>
+        <div class="flow-caption">Direct connection. No middleman fees.</div>
+      </div>
+    </div>
+
+    <!-- SMALL: Verified -->
+    <div class="bento-card bento-elevated reveal-scroll">
+      <div class="bento-icon bento-icon--teal">
+        <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+      </div>
+      <h3>Verified doctors.</h3>
+      <p>AHPRA registered, reference-checked, and insured. Every doctor on our platform is vetted.</p>
+    </div>
+
+  </div>
+</div>
+</section>
+
+<!-- ===== 4. APP SHOWCASE ===== -->
+<section class="section-subtle">
+<div class="container">
+  <h2 class="mb-4 reveal-scroll text-center">See it in <em>action.</em></h2>
+  <p class="text-muted mb-8 reveal-scroll text-center" style="max-width:420px; margin-left:auto; margin-right:auto;">Browse shifts, filter by specialty, and book — all from your phone.</p>
+</div>
+<div class="showcase-scroll">
+  <div class="showcase-item">
+    <img src="img/phone-app-store.png" alt="Download the app">
+    <p>Download the app</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-verification.png" alt="Upload your documents">
+    <p>Upload your documents</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-browse-grid.png" alt="Browse shifts">
+    <p>Browse shifts</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-browse-list.png" alt="Filter by specialty">
+    <p>Filter by specialty</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-map.png" alt="Find shifts nearby">
+    <p>Find shifts nearby</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-hospital.png" alt="View hospital details">
+    <p>View hospital details</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-shift-details.png" alt="Apply to a shift">
+    <p>Apply to a shift</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-calendar.png" alt="Track your bookings">
+    <p>Track your bookings</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-notifications.png" alt="Get notified">
+    <p>Get notified</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-reviews.png" alt="Read reviews">
+    <p>Read reviews</p>
+  </div>
+  <div class="showcase-item">
+    <img src="img/phone-analytics.png" alt="Track your stats">
+    <p>Track your stats</p>
+  </div>
+</div>
+</section>
+
+<!-- ===== 5. AUSTRALIA MAP ===== -->
+<section>
+<div class="container">
+  <div class="map-section-grid">
+    <div class="map-content reveal-scroll">
+      <h2>Covering all of <em>Australia.</em></h2>
+      <p class="text-lg text-muted">From metro Melbourne to rural Queensland, our network spans the continent.</p>
+      <div class="map-stats">
+        <span class="map-stat-pill"><strong>20+</strong>&nbsp;hospitals in VIC</span>
+        <span class="map-stat-pill"><strong>15+</strong>&nbsp;clinics in QLD</span>
+        <span class="map-stat-pill"><strong>10+</strong>&nbsp;facilities in NSW</span>
+        <span class="map-stat-pill"><strong>8+</strong>&nbsp;in SA &amp; WA</span>
+      </div>
+    </div>
+    <div class="map-visual reveal-scroll">
+      <div id="australiaMap" style="width:100%;height:480px;border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-lg);"></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 6. TESTIMONIALS ===== -->
+<section class="section-dark testimonials">
+<div class="container">
+  <div class="testimonials-heading reveal-scroll">
+    <h2>Why our doctors love <em>us.</em></h2>
+  </div>
+</div>
+<div class="testimonials-track">
+  <div class="testimonial-card">
+    <div class="testimonial-quote-mark">&ldquo;</div>
+    <p class="testimonial-text">A great initiative to help doctors be in charge of their own work-life balance with the ease of picking up shifts on demand.</p>
+    <div class="testimonial-author">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0cbb7e5d4077dcdb3d3a_headshot3.jpg" alt="Dr Layth Samari">
+      <div>
+        <div class="testimonial-name">Dr Layth Samari</div>
+        <div class="testimonial-role">MD, ACEM Trainee</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="testimonial-card">
+    <div class="testimonial-quote-mark">&ldquo;</div>
+    <p class="testimonial-text">StatDoctor enables me to see available shifts on my own terms. No annoying phone calls from managing reps trying to push shifts I don't want to do.</p>
+    <div class="testimonial-author">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891ae3e97d3296f92eea18c_dr-rose.jpg" alt="Dr Brian Rose">
+      <div>
+        <div class="testimonial-name">Dr Brian Rose</div>
+        <div class="testimonial-role">MD, HMO</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="testimonial-card">
+    <div class="testimonial-quote-mark">&ldquo;</div>
+    <p class="testimonial-text">I found StatDoctor easy and clear to use. I've been able to communicate my shifts and availability efficiently with multiple hospitals.</p>
+    <div class="testimonial-author">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0c927e5d4077dcdb27b1_headshot.jpg" alt="Dr David Burton">
+      <div>
+        <div class="testimonial-name">Dr David Burton</div>
+        <div class="testimonial-role">MD, Emergency Medicine</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="testimonial-card">
+    <div class="testimonial-quote-mark">&ldquo;</div>
+    <p class="testimonial-text">StatDoctor is like Uber for locum doctors. Simple, transparent, and puts the power back in our hands.</p>
+    <div class="testimonial-author">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0cbb7e5d4077dcdb3d3a_headshot3.jpg" alt="Dr Sophia Dean">
+      <div>
+        <div class="testimonial-name">Dr Sophia Dean</div>
+        <div class="testimonial-role">FRACGP, General Practice</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="testimonial-card">
+    <div class="testimonial-quote-mark">&ldquo;</div>
+    <p class="testimonial-text">The platform has completely changed how I approach locum work. I can see shifts, rates, and locations all in one place — no more back-and-forth with agencies.</p>
+    <div class="testimonial-author">
+      <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6891ae3e97d3296f92eea18c_dr-rose.jpg" alt="Dr Alex Patinkin">
+      <div>
+        <div class="testimonial-name">Dr Alex Patinkin</div>
+        <div class="testimonial-role">FACEM, Emergency Physician</div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== 7. FINAL CTA ===== -->
+<section class="section-dark cta-final" style="background:var(--gradient-hero)">
+<div class="container">
+  <div class="cta-glow"></div>
+  <div class="reveal-scroll">
+    <h2>Start working on <em>your terms.</em></h2>
+    <p>Join 300+ doctors across Australia who've ditched agencies for a better way to locum.</p>
+    <div class="cta-buttons">
+      <a href="https://linktr.ee/statdoctorau" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">I'm a Doctor</a>
+      <a href="find-doctors.html" class="btn btn-outline-white btn-lg">I'm a Hospital</a>
+    </div>
+    <div class="cta-stores">
+      <a href="https://apps.apple.com/au/app/statdoctor/id6452677138" target="_blank" rel="noopener"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d2a1d41210a78792018_pngegg%20(2).png" alt="App Store"></a>
+      <a href="https://play.google.com/store/apps/details?id=user.statdoctor.app&hl=en_AU" target="_blank" rel="noopener"><img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/68fa0d1e7e5d4077dcdbc6e7_pngegg%20(1).png" alt="Google Play"></a>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer id="site-footer" class="site-footer"></footer>
+
+<script src="js/nav.js"></script>
+<script src="js/map.js"></script>
+<script>
+// Hero phone image carousel
+(function() {
+  const imgs = document.querySelectorAll('.hero-phone-img');
+  if (imgs.length < 2) return;
+  let current = 0;
+  setInterval(function() {
+    imgs[current].classList.remove('active');
+    current = (current + 1) % imgs.length;
+    imgs[current].classList.add('active');
+  }, 3000);
+})();
+</script>
+</body>
+</html>

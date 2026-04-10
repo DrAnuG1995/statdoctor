@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog – StatDoctor</title>
+  <meta name="description" content="Insights, tips, and news for locum doctors in Australia.">
+  <link rel="icon" href="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6890a03498323d7b7c29d34e_statdoc_logo.svg" type="image/svg+xml">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/animations.css">
+  <link rel="stylesheet" href="css/blog.css">
+</head>
+<body>
+
+<header id="site-nav"></header>
+
+<!-- Header -->
+<section class="blog-header">
+  <div class="container">
+    <h1 class="reveal-scroll">Blog</h1>
+    <p class="reveal-scroll">Insights, tips, and news for locum doctors in Australia</p>
+  </div>
+</section>
+
+<!-- Filter Bar -->
+<section style="padding-top:0;padding-bottom:0">
+  <div class="container">
+    <div class="filter-bar reveal-scroll">
+      <div class="filter-pills">
+        <button class="filter-pill active" data-filter="all">All</button>
+        <button class="filter-pill" data-filter="locum">#locum</button>
+        <button class="filter-pill" data-filter="medicine">#medicine</button>
+        <button class="filter-pill" data-filter="tips">#tips</button>
+      </div>
+      <select class="sort-select" id="sortSelect">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="name-az">Name A-Z</option>
+        <option value="name-za">Name Z-A</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Post -->
+<section style="padding-top:0">
+  <div class="container">
+    <article class="featured-post reveal-scroll" data-tags="locum tips" data-date="2026-04-05" data-name="5 Benefits of Locum Work Beyond Money">
+      <div class="featured-post-img">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6890a03498323d7b7c29d34e_statdoc_logo.svg" alt="5 Benefits of Locum Work Beyond Money" loading="lazy">
+      </div>
+      <div class="featured-post-body">
+        <span class="blog-tag">Health</span>
+        <h2>5 Benefits of Locum Work Beyond Money</h2>
+        <p>Discover the lifestyle advantages that make locum work appealing beyond just the pay rate.</p>
+        <div class="blog-meta">
+          <span>StatDoctor</span>
+          <span>&middot;</span>
+          <span>6 min read</span>
+        </div>
+      </div>
+    </article>
+
+    <!-- Blog Grid -->
+    <div class="blog-grid">
+
+      <!-- Card 1 (same as featured, included for filtering/sorting) -->
+      <article class="blog-card reveal-scroll" data-tags="locum tips" data-date="2026-04-05" data-name="5 Benefits of Locum Work Beyond Money">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/6890a03498323d7b7c29d34e_statdoc_logo.svg" alt="5 Benefits of Locum Work Beyond Money" class="blog-card-img blog-card-img--contain" loading="lazy">
+        <div class="blog-card-body">
+          <span class="blog-tag">Health</span>
+          <h3>5 Benefits of Locum Work Beyond Money</h3>
+          <p>Discover the lifestyle advantages that make locum work appealing beyond just the pay rate.</p>
+          <div class="blog-meta">
+            <span>StatDoctor</span>
+            <span>&middot;</span>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2 -->
+      <article class="blog-card reveal-scroll" data-tags="locum medicine" data-date="2026-04-01" data-name="Locum Doctor Work in South Australia">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697828648e6bd8e828e91b1c_statdocto_doctors_available-07-03.png" alt="Locum Doctor Work in South Australia" class="blog-card-img" loading="lazy">
+        <div class="blog-card-body">
+          <span class="blog-tag">Health</span>
+          <h3>Locum Doctor Work in South Australia: Pay Rates, Regions, and How to Get Started</h3>
+          <p>A guide to locum opportunities in SA, including regional pay rates and getting started.</p>
+          <div class="blog-meta">
+            <span>Anu Ganugapati</span>
+            <span>&middot;</span>
+            <span>April 1, 2026</span>
+            <span>&middot;</span>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3 -->
+      <article class="blog-card reveal-scroll" data-tags="tips locum" data-date="2026-04-01" data-name="Superannuation for Locum Doctors">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697828648e6bd8e828e91b1c_statdocto_doctors_available-07-03.png" alt="Superannuation for Locum Doctors" class="blog-card-img" loading="lazy">
+        <div class="blog-card-body">
+          <span class="blog-tag">Health</span>
+          <h3>Superannuation for Locum Doctors in Australia: What You Actually Need to Know</h3>
+          <p>Navigate superannuation as a locum doctor with practical advice on contributions and structure.</p>
+          <div class="blog-meta">
+            <span>Anu Ganugapati</span>
+            <span>&middot;</span>
+            <span>April 1, 2026</span>
+            <span>&middot;</span>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 4 -->
+      <article class="blog-card reveal-scroll" data-tags="medicine locum" data-date="2026-03-29" data-name="Locum Anaesthetics Jobs in Australia">
+        <img src="https://cdn.prod.website-files.com/688db6d677516719c3925d01/697828648e6bd8e828e91b1c_statdocto_doctors_available-07-03.png" alt="Locum Anaesthetics Jobs in Australia" class="blog-card-img" loading="lazy">
+        <div class="blog-card-body">
+          <span class="blog-tag">Health</span>
+          <h3>Locum Anaesthetics Jobs in Australia: Pay, Demand, and What You Need</h3>
+          <p>Everything you need to know about locum anaesthetics positions across Australia.</p>
+          <div class="blog-meta">
+            <span>Anu Ganugapati</span>
+            <span>&middot;</span>
+            <span>March 29, 2026</span>
+            <span>&middot;</span>
+            <span>6 min read</span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<footer id="site-footer" class="site-footer"></footer>
+
+<script src="js/nav.js"></script>
+<script src="js/blog-filter.js"></script>
+</body>
+</html>

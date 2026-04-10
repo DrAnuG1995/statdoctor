@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "marketing-site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "/Users/anurag/statdoctor-github/site"],
+      "port": 8090
+    },
+    {
+      "name": "crm-dev",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": ["/Users/anurag/statdoctor-github/direct-shift-connect/node_modules/.bin/vite", "--port", "5174"],
+      "port": 5174,
+      "cwd": "/Users/anurag/statdoctor-github/direct-shift-connect"
+    }
+  ]
+}
