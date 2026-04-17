@@ -1,10 +1,7 @@
 [build]
   base = "direct-shift-connect"
-  command = "npm run build"
-  publish = "direct-shift-connect/dist"
-
-[build.environment]
-  NODE_VERSION = "20"
+  command = "echo 'Using pre-built dist'"
+  publish = "dist"
 
 [[redirects]]
   from = "/*"

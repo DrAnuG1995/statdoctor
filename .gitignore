@@ -6,8 +6,7 @@
 # Dependencies
 node_modules/
 
-# Build output
-dist/
+# Build output (allow direct-shift-connect/dist for Netlify deploy)
 dist-ssr/
 build/
 
