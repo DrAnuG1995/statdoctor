@@ -22,7 +22,7 @@ jobs:
           node-version: "20"
 
       - name: Install sync deps only
-        run: npm install --no-save --no-audit @supabase/supabase-js@^2
+        run: npm install --no-save --no-audit --legacy-peer-deps @supabase/supabase-js@^2
 
       - name: Run daily sync
         env:
