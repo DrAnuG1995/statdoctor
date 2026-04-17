@@ -282,12 +282,20 @@ async function syncDoctors() {
         processedDetails++;
 
         // Decode medical info
+        // NEW API format: skillLevel/specialties are already decoded strings.
+        // Fall back to legacy codes (seniority/specialty) for older records.
         const medicalVO = detail.medicalVO || {};
-        const skillLevel = decodeSkillLevel(medicalVO.seniority);
+        const skillLevel = medicalVO.skillLevel
+          || decodeSkillLevel(medicalVO.seniority);
         const medicalDegree = decodeMedicalDegree(medicalVO.medicalDegree);
-        const specialities = decodeSpecialities(
-          medicalVO.specialty ? medicalVO.specialty.split(",").filter(Boolean) : []
-        );
+        const specsRaw = medicalVO.specialties || medicalVO.specialty || "";
+        const specsList = specsRaw.split(",").map(s => s.trim()).filter(Boolean);
+        // If they look like legacy codes ("sp-6"), decode them
+        const specialities = specsList[0]?.startsWith("sp-") || specsList[0]?.match(/^(su|te)\d+$/)
+          ? decodeSpecialities(specsList)
+          : specsList;
+        const ahpraNumber = medicalVO.ahpraNumber || null;
+        const ahpraLicenseFlag = medicalVO.ahpraLicenseFlag;
 
         // Parse refs and docs verification
         const refs = parseRefsVerification(detail.referencesVOList);
@@ -302,11 +310,13 @@ async function syncDoctors() {
 
         // Build update payload
         const payload = {
-          full_name: `Dr. ${info.firstName || ""} ${info.lastName || ""}`.trim() || undefined,
-          phone: info.mobile || undefined,
+          full_name: `Dr. ${info.firstName || ""} ${info.surname || info.lastName || ""}`.trim() || undefined,
+          phone: info.mobileNumber || info.mobile || undefined,
           skill_level: skillLevel || undefined,
           medical_degree: medicalDegree || undefined,
           specialities: specialities.length > 0 ? specialities : undefined,
+          ahpra_number: ahpraNumber || undefined,
+          ahpra_restrictions: ahpraLicenseFlag === false,
           has_references: refs.count > 0,
           has_documents: docs.uploaded > 0,
           source: "admin_portal",

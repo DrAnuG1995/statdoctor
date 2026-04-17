@@ -1,4 +1,4 @@
-import { useState, useMemo, lazy, Suspense } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -42,6 +42,49 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Shift } from "../shared/types";
 
+async function fetchAllShifts(
+  search: string,
+  statusFilter: string,
+  hospitalFilter: string,
+  specialtyFilter: string
+): Promise<Shift[]> {
+  const PAGE_SIZE = 1000;
+  let allData: Shift[] = [];
+  let page = 0;
+  let hasMore = true;
+
+  while (hasMore) {
+    let query = supabase
+      .from("shifts")
+      .select("*")
+      .order("start_time", { ascending: false })
+      .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+
+    if (statusFilter && statusFilter !== "all") {
+      query = query.eq("status", statusFilter);
+    }
+    if (hospitalFilter && hospitalFilter !== "all") {
+      query = query.eq("hospital_name", hospitalFilter);
+    }
+    if (specialtyFilter && specialtyFilter !== "all") {
+      query = query.eq("specialty", specialtyFilter);
+    }
+    if (search) {
+      query = query.or(
+        `hospital_name.ilike.%${search}%,specialty.ilike.%${search}%,hospital_location.ilike.%${search}%,shift_id.ilike.%${search}%`
+      );
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    allData = allData.concat((data || []) as Shift[]);
+    hasMore = (data?.length || 0) === PAGE_SIZE;
+    page++;
+  }
+
+  return allData;
+}
+
 function useShifts(
   search: string,
   statusFilter: string,
@@ -50,34 +93,76 @@ function useShifts(
 ) {
   return useQuery({
     queryKey: ["shifts", search, statusFilter, hospitalFilter, specialtyFilter],
+    queryFn: () =>
+      fetchAllShifts(search, statusFilter, hospitalFilter, specialtyFilter),
+  });
+}
+
+function useShiftMetrics() {
+  return useQuery({
+    queryKey: ["shift-metrics"],
     queryFn: async () => {
-      let query = supabase
-        .from("shifts")
-        .select("*")
-        .order("start_time", { ascending: false })
-        .range(0, 1999);
+      // Use separate count queries for accurate metrics across all data
+      const [activeRes, confirmedRes, archivedRes, totalRes] = await Promise.all(
+        [
+          supabase
+            .from("shifts")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "Active"),
+          supabase
+            .from("shifts")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "Confirmed"),
+          supabase
+            .from("shifts")
+            .select("*", { count: "exact", head: true })
+            .eq("status", "Archived"),
+          supabase
+            .from("shifts")
+            .select("*", { count: "exact", head: true }),
+        ]
+      );
 
-      if (statusFilter && statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
+      // Fetch rate + time data for value calculations (paginated)
+      let rateData: { rate_per_hour: number; start_time: string | null; end_time: string | null }[] = [];
+      let page = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data } = await supabase
+          .from("shifts")
+          .select("rate_per_hour, start_time, end_time, hospital_name")
+          .range(page * 1000, (page + 1) * 1000 - 1);
+        rateData = rateData.concat(data || []);
+        hasMore = (data?.length || 0) === 1000;
+        page++;
       }
 
-      if (hospitalFilter && hospitalFilter !== "all") {
-        query = query.eq("hospital_name", hospitalFilter);
-      }
+      const uniqueHospitals = new Set(
+        rateData.map((s: any) => s.hospital_name).filter(Boolean)
+      ).size;
+      const avgRate =
+        rateData.length > 0
+          ? Math.round(
+              rateData.reduce((sum, s) => sum + (s.rate_per_hour || 0), 0) /
+                rateData.length
+            )
+          : 0;
+      const totalValue = rateData.reduce((sum, s) => {
+        const start = s.start_time ? new Date(s.start_time).getTime() : 0;
+        const end = s.end_time ? new Date(s.end_time).getTime() : 0;
+        const hours = start && end ? (end - start) / 3600000 : 0;
+        return sum + hours * (s.rate_per_hour || 0);
+      }, 0);
 
-      if (specialtyFilter && specialtyFilter !== "all") {
-        query = query.eq("specialty", specialtyFilter);
-      }
-
-      if (search) {
-        query = query.or(
-          `hospital_name.ilike.%${search}%,specialty.ilike.%${search}%,hospital_location.ilike.%${search}%,shift_id.ilike.%${search}%`
-        );
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as Shift[];
+      return {
+        totalShifts: totalRes.count || 0,
+        activeShifts: activeRes.count || 0,
+        confirmedShifts: confirmedRes.count || 0,
+        archivedShifts: archivedRes.count || 0,
+        uniqueHospitals,
+        avgRate,
+        totalValue,
+      };
     },
   });
 }
@@ -86,20 +171,29 @@ function useShiftFilters() {
   return useQuery({
     queryKey: ["shift-filters"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("shifts")
-        .select("hospital_name, specialty, status")
-        .range(0, 1999);
-      if (error) throw error;
+      // Paginate to get all filter values
+      let allData: { hospital_name: string; specialty: string; status: string }[] = [];
+      let page = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("shifts")
+          .select("hospital_name, specialty, status")
+          .range(page * 1000, (page + 1) * 1000 - 1);
+        if (error) throw error;
+        allData = allData.concat(data || []);
+        hasMore = (data?.length || 0) === 1000;
+        page++;
+      }
 
       const hospitals = [
-        ...new Set(data.map((d) => d.hospital_name).filter(Boolean)),
+        ...new Set(allData.map((d) => d.hospital_name).filter(Boolean)),
       ].sort();
       const specialties = [
-        ...new Set(data.map((d) => d.specialty).filter(Boolean)),
+        ...new Set(allData.map((d) => d.specialty).filter(Boolean)),
       ].sort();
       const statuses = [
-        ...new Set(data.map((d) => d.status).filter(Boolean)),
+        ...new Set(allData.map((d) => d.status).filter(Boolean)),
       ].sort();
 
       return { hospitals, specialties, statuses };
@@ -192,43 +286,14 @@ export default function ShiftsPage() {
     specialtyFilter
   );
   const { data: filters } = useShiftFilters();
+  const { data: metrics = {
+    totalShifts: 0, activeShifts: 0, confirmedShifts: 0,
+    archivedShifts: 0, uniqueHospitals: 0, avgRate: 0, totalValue: 0,
+  } } = useShiftMetrics();
 
   const setTab = (tab: Tab) => {
     setSearchParams(tab === "list" ? {} : { tab });
   };
-
-  const metrics = useMemo(() => {
-    const totalShifts = shifts.length;
-    const activeShifts = shifts.filter((s) => s.status === "Active").length;
-    const confirmedShifts = shifts.filter(
-      (s) => s.status === "Confirmed"
-    ).length;
-    const archivedShifts = shifts.filter((s) => s.status === "Archived").length;
-    const uniqueHospitals = new Set(shifts.map((s) => s.hospital_name)).size;
-    const avgRate =
-      shifts.length > 0
-        ? Math.round(
-            shifts.reduce((sum, s) => sum + (s.rate_per_hour || 0), 0) /
-              shifts.length
-          )
-        : 0;
-    const totalValue = shifts.reduce((sum, s) => {
-      const start = s.start_time ? new Date(s.start_time).getTime() : 0;
-      const end = s.end_time ? new Date(s.end_time).getTime() : 0;
-      const hours = start && end ? (end - start) / 3600000 : 0;
-      return sum + hours * (s.rate_per_hour || 0);
-    }, 0);
-
-    return {
-      totalShifts,
-      activeShifts,
-      confirmedShifts,
-      archivedShifts,
-      uniqueHospitals,
-      avgRate,
-      totalValue,
-    };
-  }, [shifts]);
 
   return (
     <div>
