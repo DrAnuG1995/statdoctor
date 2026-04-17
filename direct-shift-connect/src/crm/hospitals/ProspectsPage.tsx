@@ -7,7 +7,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Search, Mail, Send, Upload, Building2, Globe, Users, Undo2, AlertTriangle } from "lucide-react";
+import { Search, Mail, Send, Upload, Building2, Globe, Users, Undo2, AlertTriangle, ExternalLink, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import EnrollInFlowDialog from "../email/EnrollInFlowDialog";
 import { toast } from "sonner";
 import { logActivity } from "../shared/logActivity";
 import { ComposeEmailDialog } from "../shared/components/ComposeEmailDialog";
@@ -23,7 +25,7 @@ interface Prospect {
   health_service: string;
   contact: string;
   role: string;
-  source: "MedRecruit" | "Notion";
+  source: "MedRecruit" | "Notion" | "ACEM";
 }
 
 // ── MedRecruit Hospital List (139 hospitals) ────────────────────────
@@ -216,16 +218,32 @@ const NOTION_HOSPITALS: Prospect[] = [
   { hospital: "Modbury Hospital", email: "", contact: "", role: "", source: "Notion", location: "SA", type: "", health_service: "" },
 ];
 
+// ── ACEM Jobs Board Prospects (Apr 2026) ───────────────────────────
+
+const ACEM_HOSPITALS: Prospect[] = [
+  { hospital: "WA Virtual Emergency Department (WAVED)", location: "Perth, WA", type: "Virtual ED", email: "Ian.Dey@health.wa.gov.au", health_service: "WA Country Health Service (WACHS)", contact: "Dr Ian Dey", role: "Medical Director - WAVED", source: "ACEM" },
+  { hospital: "Gawler Health Service", location: "Gawler East, SA", type: "Public Hospital", email: "sheetal.kanani@sa.gov.au", health_service: "Barossa Hills Fleurieu LHN", contact: "Sheetal Kanani", role: "Senior Medical Services Officer", source: "ACEM" },
+  { hospital: "Launceston General Hospital", location: "Launceston, TAS", type: "Public Hospital", email: "fiona.cowan@ths.tas.gov.au", health_service: "Tasmanian Health Service", contact: "Dr Fiona Cowan", role: "Staff Specialist ED", source: "ACEM" },
+  { hospital: "Box Hill Hospital", location: "Box Hill, VIC", type: "Metropolitan/Teaching", email: "anita.liu@easternhealth.org.au", health_service: "Eastern Health", contact: "Dr Anita Liu", role: "ED Director", source: "ACEM" },
+  { hospital: "Maroondah Hospital", location: "Ringwood East, VIC", type: "Metropolitan", email: "benjamin.land@easternhealth.org.au", health_service: "Eastern Health", contact: "Dr Ben Land", role: "ED Director", source: "ACEM" },
+  { hospital: "Angliss Hospital", location: "Upper Ferntree Gully, VIC", type: "Metropolitan", email: "martin.koolstra@easternhealth.org.au", health_service: "Eastern Health", contact: "Dr Marty Koolstra", role: "ED Director", source: "ACEM" },
+  { hospital: "Maitland Hospital", location: "Metford, NSW", type: "Regional", email: "scott.flannagan@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "Dr Scott Flannagan", role: "Co-Director ED", source: "ACEM" },
+  { hospital: "Bundaberg Hospital", location: "Bundaberg, QLD", type: "Regional", email: "", health_service: "Wide Bay HHS", contact: "Dr Timothy Graves", role: "ED Contact", source: "ACEM" },
+  { hospital: "Auckland City Hospital", location: "Auckland, NZ", type: "Tertiary/Teaching", email: "markfr@adhb.govt.nz", health_service: "Health New Zealand - Te Whatu Ora", contact: "Mark Friedericksen", role: "Service Clinical Director AED", source: "ACEM" },
+  { hospital: "PEHA (Private Emergency Health Australia)", location: "Townsville/Rockhampton/Mackay/Bundaberg, QLD", type: "Private ED Provider", email: "joinus@peha.com.au", health_service: "PEHA", contact: "", role: "", source: "ACEM" },
+];
+
 // ── All prospects combined ──────────────────────────────────────────
 
-const ALL_PROSPECTS: Prospect[] = [...MEDRECRUIT_HOSPITALS, ...NOTION_HOSPITALS];
+const ALL_PROSPECTS: Prospect[] = [...MEDRECRUIT_HOSPITALS, ...NOTION_HOSPITALS, ...ACEM_HOSPITALS];
 
 // ── ProspectsPage Component ─────────────────────────────────────────
 
-export default function ProspectsPage({ existingHospitalNames }: { existingHospitalNames: Set<string> }) {
+export default function ProspectsPage({ existingHospitalNames, hospitalNameToId }: { existingHospitalNames: Set<string>; hospitalNameToId?: Map<string, string> }) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [sourceFilter, setSourceFilter] = useState<"all" | "MedRecruit" | "Notion">("all");
+  const [sourceFilter, setSourceFilter] = useState<"all" | "MedRecruit" | "Notion" | "ACEM">("all");
   const [typeFilter, setTypeFilter] = useState("all");
   const [selectedIdxs, setSelectedIdxs] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
@@ -234,6 +252,7 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
   const [showCompose, setShowCompose] = useState(false);
   const [emailRecipients, setEmailRecipients] = useState<{ name: string; email: string }[]>([]);
   const [showConfirmImport, setShowConfirmImport] = useState(false);
+  const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [lastImportIds, setLastImportIds] = useState<{ hospitalIds: string[]; dealIds: string[] } | null>(null);
   const [undoing, setUndoing] = useState(false);
 
@@ -476,6 +495,16 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
     .map((idx) => ALL_PROSPECTS[idx])
     .filter((p) => p.email).length;
 
+  const enrollRecipients = Array.from(selectedIdxs)
+    .map((idx) => ALL_PROSPECTS[idx])
+    .filter((p) => p.email)
+    .map((p) => ({
+      entityType: "hospital" as const,
+      entityId: hospitalNameToId?.get(p.hospital.toLowerCase()) || p.hospital,
+      name: p.hospital,
+      email: p.email,
+    }));
+
   return (
     <div>
       {/* Stats Cards */}
@@ -519,8 +548,8 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
               <Globe className="h-4 w-4 text-purple-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-purple-600">{MEDRECRUIT_HOSPITALS.length} / {NOTION_HOSPITALS.length}</p>
-              <p className="text-xs text-muted-foreground">MedRecruit / Notion</p>
+              <p className="text-2xl font-bold text-purple-600">{MEDRECRUIT_HOSPITALS.length} / {NOTION_HOSPITALS.length} / {ACEM_HOSPITALS.length}</p>
+              <p className="text-xs text-muted-foreground">MedRecruit / Notion / ACEM</p>
             </div>
           </CardContent>
         </Card>
@@ -546,6 +575,7 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
               <SelectItem value="all">All Sources</SelectItem>
               <SelectItem value="MedRecruit">MedRecruit</SelectItem>
               <SelectItem value="Notion">Notion</SelectItem>
+              <SelectItem value="ACEM">ACEM</SelectItem>
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -591,6 +621,15 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
                 Email {selectedWithEmail > 0 ? selectedWithEmail : ""}
               </Button>
               <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowEnrollDialog(true)}
+                disabled={selectedWithEmail === 0}
+              >
+                <Zap className="mr-1.5 h-4 w-4 text-amber-500" />
+                Enroll in Flow
+              </Button>
+              <Button
                 size="sm"
                 onClick={handleImportClick}
                 disabled={importing}
@@ -633,13 +672,21 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
               return (
                 <div
                   key={row._idx}
-                  className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors cursor-pointer ${
                     alreadyExists
-                      ? "opacity-40 bg-gray-50"
+                      ? "opacity-60 bg-gray-50 hover:bg-gray-100/80"
                       : isSelected
                       ? "bg-blue-50/60"
                       : "hover:bg-gray-50/50"
                   }`}
+                  onClick={() => {
+                    const hospitalId = hospitalNameToId?.get(row.hospital.toLowerCase());
+                    if (alreadyExists && hospitalId) {
+                      navigate(`/crm/hospitals/${hospitalId}`);
+                    } else if (!alreadyExists) {
+                      toggleIdx(row._idx);
+                    }
+                  }}
                 >
                   <div className="w-8">
                     <Checkbox
@@ -655,6 +702,8 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
                         className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap ${
                           row.source === "MedRecruit"
                             ? "text-blue-600 bg-blue-50"
+                            : row.source === "ACEM"
+                            ? "text-green-600 bg-green-50"
                             : "text-purple-600 bg-purple-50"
                         }`}
                       >
@@ -689,14 +738,25 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
                       <span className="text-muted-foreground/50">—</span>
                     )}
                   </div>
-                  <div className="w-[80px] flex justify-center">
+                  <div className="w-[80px] flex justify-center gap-1">
+                    {alreadyExists && hospitalNameToId?.get(row.hospital.toLowerCase()) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0"
+                        title="View in CRM"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/crm/hospitals/${hospitalNameToId.get(row.hospital.toLowerCase())}`); }}
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 text-[#1F3A6A]" />
+                      </Button>
+                    )}
                     {row.email && !alreadyExists && (
                       <Button
                         variant="ghost"
                         size="sm"
                         className="h-7 w-7 p-0"
                         title={`Email ${row.hospital}`}
-                        onClick={() => handleEmailOne(row)}
+                        onClick={(e) => { e.stopPropagation(); handleEmailOne(row); }}
                       >
                         <Send className="h-3.5 w-3.5 text-[#1F3A6A]" />
                       </Button>
@@ -761,6 +821,13 @@ export default function ProspectsPage({ existingHospitalNames }: { existingHospi
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Enroll in Flow Dialog */}
+      <EnrollInFlowDialog
+        open={showEnrollDialog}
+        onOpenChange={setShowEnrollDialog}
+        recipients={enrollRecipients}
+      />
     </div>
   );
 }

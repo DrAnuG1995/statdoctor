@@ -287,3 +287,54 @@ export interface Email {
   synced_at: string;
   created_at: string;
 }
+
+// Email Sequences
+export interface FlowStep {
+  id: string;
+  type: "email" | "delay";
+  subject?: string;
+  body?: string;
+  delayDays?: number;
+}
+
+export interface EmailFlow {
+  id: string;
+  name: string;
+  description: string | null;
+  audience: "hospitals" | "doctors" | "investors";
+  status: "draft" | "active" | "paused";
+  steps: FlowStep[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EmailEnrollment {
+  id: string;
+  flow_id: string;
+  entity_type: "hospital" | "doctor" | "investor";
+  entity_id: string;
+  entity_name: string | null;
+  entity_email: string;
+  current_step_index: number;
+  status: "active" | "paused" | "completed" | "cancelled";
+  next_send_at: string | null;
+  enrolled_at: string;
+  completed_at: string | null;
+  updated_at: string;
+  // Joined fields
+  flow?: EmailFlow;
+}
+
+export interface EmailSendLog {
+  id: string;
+  enrollment_id: string;
+  flow_id: string;
+  step_index: number;
+  subject: string | null;
+  recipient_email: string;
+  status: "draft_created" | "sent" | "failed" | "skipped";
+  gmail_draft_id: string | null;
+  gmail_message_id: string | null;
+  created_at: string;
+  sent_at: string | null;
+}

@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,10 +21,8 @@ import { toast } from "sonner";
 interface FlowStep {
   id: string;
   type: "email" | "delay";
-  // email fields
   subject?: string;
   body?: string;
-  // delay fields
   delayDays?: number;
 }
 
@@ -37,21 +37,18 @@ interface EmailFlow {
   updatedAt: string;
 }
 
-// ── Storage ────────────────────────────────────────────────────────────
-
-const STORAGE_KEY = "statdoctor-email-flows";
-
-function loadFlows(): EmailFlow[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : DEFAULT_FLOWS;
-  } catch {
-    return DEFAULT_FLOWS;
-  }
-}
-
-function saveFlows(flows: EmailFlow[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(flows));
+// DB row → component type
+function dbToFlow(row: Record<string, unknown>): EmailFlow {
+  return {
+    id: row.id as string,
+    name: row.name as string,
+    description: (row.description as string) || "",
+    audience: row.audience as EmailFlow["audience"],
+    status: row.status as EmailFlow["status"],
+    steps: (row.steps as FlowStep[]) || [],
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
 }
 
 // ── Brand HTML wrapper ─────────────────────────────────────────────────
@@ -314,6 +311,160 @@ The StatDoctor Team`,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
+  {
+    id: "agency-poach-sequence",
+    name: "Agency-Listed Hospital Outreach",
+    description: "Target hospitals posting locum shifts through agencies — pitch StatDoctor as a cheaper direct alternative",
+    audience: "hospitals",
+    status: "draft",
+    steps: [
+      {
+        id: "a1",
+        type: "email",
+        subject: "Noticed you're hiring locum doctors — there's a cheaper way",
+        body: `Hi {{name}},
+
+I'm Anurag from StatDoctor. I came across your hospital's locum listings and wanted to reach out.
+
+We built StatDoctor specifically to help hospitals like yours fill locum shifts without the agency markup. Here's the difference:
+
+Agency route: Post with an agency → pay 20-30% on top → limited visibility into who applies
+StatDoctor: Post directly → verified doctors apply within hours → zero commission
+
+We have 250+ verified doctors across Australia already on the platform. Hospitals that have switched are saving an average of 30% per locum placement.
+
+Would you be open to a 10-minute call to see if it could work for your ED?
+
+Best,
+Anurag
+Co-Founder, StatDoctor
+anu@statdoctor.net`,
+      },
+      { id: "a2", type: "delay", delayDays: 3 },
+      {
+        id: "a3",
+        type: "email",
+        subject: "Re: Locum staffing without the agency fees",
+        body: `Hi {{name}},
+
+Quick follow up — I know how hectic running an ED can be, so I'll keep this brief.
+
+StatDoctor is free for hospitals to use. You post a shift, doctors apply, you pick who you want. No contracts, no commissions, no lock-in.
+
+Here's what takes 60 seconds on our platform:
+1. Post your shift details (dates, rates, requirements)
+2. Get notified as verified doctors apply
+3. Confirm the doctor you want — done
+
+We handle the verification so you don't have to chase documents. Every doctor on the platform has verified credentials, references, and AHPRA registration.
+
+Happy to set up a quick demo if you'd like to see it in action.
+
+Cheers,
+Anurag`,
+      },
+      { id: "a4", type: "delay", delayDays: 5 },
+      {
+        id: "a5",
+        type: "email",
+        subject: "What {{name}} could save on locum costs",
+        body: `Hi {{name}},
+
+Last one from me — I promise!
+
+I ran some quick numbers. If your ED fills even 2 locum shifts per month through agencies, you're likely paying $5,000–$15,000 in placement fees alone.
+
+With StatDoctor, that cost drops to $0. Same quality doctors, same speed, zero commission.
+
+If the timing isn't right now, no worries at all. But when you're ready to try a different approach to locum staffing, we're here: statdoctor.app
+
+All the best to you and your team.
+
+Cheers,
+Anurag
+Co-Founder, StatDoctor`,
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "acem-hospital-outreach",
+    name: "ACEM Job Board Hospital Outreach",
+    description: "Tailored sequence for hospitals found posting on the ACEM job board",
+    audience: "hospitals",
+    status: "draft",
+    steps: [
+      {
+        id: "m1",
+        type: "email",
+        subject: "Saw your ACEM listing — a quicker way to fill ED shifts",
+        body: `Hi {{name}},
+
+I noticed your hospital has positions listed on the ACEM job board — so I know you're actively building your ED team.
+
+While ACEM is great for training positions, if you also need to fill locum or short-term shifts, I wanted to introduce StatDoctor.
+
+We're an Australian platform that connects hospitals directly with verified emergency doctors — no agencies, no placement fees. Hospitals post a shift and get applications within hours.
+
+What makes us different:
+• Every doctor is credential-verified (AHPRA, references, documents)
+• Zero commission — hospitals and doctors connect directly
+• Post a shift in under 60 seconds from your dashboard
+• 250+ doctors across Australia already on the platform
+
+Would a quick 15-minute call be useful to explore how StatDoctor could complement your existing recruitment?
+
+Best regards,
+Anurag
+Co-Founder, StatDoctor
+anu@statdoctor.net`,
+      },
+      { id: "m2", type: "delay", delayDays: 4 },
+      {
+        id: "m3",
+        type: "email",
+        subject: "Re: Quick way to fill ED locum shifts",
+        body: `Hi {{name}},
+
+Just circling back on my earlier email. I know recruiting for ED is always a juggle.
+
+One thing I hear from ED directors is that agency locums are expensive and unpredictable. StatDoctor fixes both:
+
+• You control the rates (post what you're willing to pay)
+• You see who's applying and their full profile
+• Doctors are verified before they even apply to your shifts
+
+Several hospitals have told us they fill shifts 3x faster than going through an agency, and at a fraction of the cost.
+
+Happy to send through a quick demo link or jump on a call — whatever works best.
+
+Cheers,
+Anurag`,
+      },
+      { id: "m4", type: "delay", delayDays: 6 },
+      {
+        id: "m5",
+        type: "email",
+        subject: "Final thought on locum staffing for your ED",
+        body: `Hi {{name}},
+
+This is my last follow up — I don't want to be that person!
+
+If your hospital ever needs a fast, free way to find verified locum doctors for your ED, StatDoctor is here. No setup fees, no contracts, no commission.
+
+You can check us out anytime at statdoctor.app or just reply to this email and I'll personally walk you through it.
+
+Wishing your ED team all the best — it's tough work and you're doing an incredible job.
+
+Cheers,
+Anurag
+Co-Founder, StatDoctor`,
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
 ];
 
 // ── Helpers ────────────────────────────────────────────────────────────
@@ -337,17 +488,28 @@ const STATUS_CONFIG = {
 // ── Component ──────────────────────────────────────────────────────────
 
 export default function EmailFlowsPage() {
-  const [flows, setFlows] = useState<EmailFlow[]>(loadFlows);
+  const queryClient = useQueryClient();
+
+  const { data: flows = [], isLoading } = useQuery({
+    queryKey: ["email-flows"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("email_flows")
+        .select("*")
+        .order("created_at", { ascending: false });
+      // Fall back to defaults if table doesn't exist yet (migration not run)
+      if (error) return DEFAULT_FLOWS;
+      return (data || []).length > 0 ? data.map(dbToFlow) : DEFAULT_FLOWS;
+    },
+  });
+
   const [editingFlow, setEditingFlow] = useState<EmailFlow | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewStep, setPreviewStep] = useState<FlowStep | null>(null);
   const [showNewFlow, setShowNewFlow] = useState(false);
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
 
-  const persist = (updated: EmailFlow[]) => {
-    setFlows(updated);
-    saveFlows(updated);
-  };
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ["email-flows"] });
 
   // ── New flow ──
 
@@ -355,30 +517,33 @@ export default function EmailFlowsPage() {
   const [newFlowDesc, setNewFlowDesc] = useState("");
   const [newFlowAudience, setNewFlowAudience] = useState<EmailFlow["audience"]>("hospitals");
 
-  const handleCreateFlow = () => {
+  const handleCreateFlow = async () => {
     if (!newFlowName.trim()) {
       toast.error("Flow name is required");
       return;
     }
-    const flow: EmailFlow = {
-      id: genId(),
-      name: newFlowName.trim(),
-      description: newFlowDesc.trim(),
-      audience: newFlowAudience,
-      status: "draft",
-      steps: [
-        {
-          id: genId(),
-          type: "email",
-          subject: "",
-          body: `Hi {{name}},\n\n\n\nBest regards,\nThe StatDoctor Team`,
-        },
-      ],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    persist([flow, ...flows]);
-    setEditingFlow(flow);
+    const steps: FlowStep[] = [
+      {
+        id: genId(),
+        type: "email",
+        subject: "",
+        body: `Hi {{name}},\n\n\n\nBest regards,\nThe StatDoctor Team`,
+      },
+    ];
+    const { data, error } = await supabase
+      .from("email_flows")
+      .insert({
+        name: newFlowName.trim(),
+        description: newFlowDesc.trim(),
+        audience: newFlowAudience,
+        status: "draft",
+        steps,
+      })
+      .select()
+      .single();
+    if (error) { toast.error(error.message); return; }
+    invalidate();
+    setEditingFlow(dbToFlow(data));
     setShowNewFlow(false);
     setNewFlowName("");
     setNewFlowDesc("");
@@ -392,39 +557,55 @@ export default function EmailFlowsPage() {
     setEditingFlow({ ...editingFlow, ...patch, updatedAt: new Date().toISOString() });
   };
 
-  const saveEditingFlow = () => {
+  const saveEditingFlow = async () => {
     if (!editingFlow) return;
-    const updated = flows.map((f) => (f.id === editingFlow.id ? editingFlow : f));
-    persist(updated);
+    const { error } = await supabase
+      .from("email_flows")
+      .update({
+        name: editingFlow.name,
+        description: editingFlow.description,
+        audience: editingFlow.audience,
+        status: editingFlow.status,
+        steps: editingFlow.steps,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", editingFlow.id);
+    if (error) { toast.error(error.message); return; }
+    invalidate();
     toast.success("Flow saved");
   };
 
-  const deleteFlow = (id: string) => {
-    persist(flows.filter((f) => f.id !== id));
+  const deleteFlow = async (id: string) => {
+    const { error } = await supabase.from("email_flows").delete().eq("id", id);
+    if (error) { toast.error(error.message); return; }
+    invalidate();
     if (editingFlow?.id === id) setEditingFlow(null);
     toast.success("Flow deleted");
   };
 
-  const duplicateFlow = (flow: EmailFlow) => {
-    const copy: EmailFlow = {
-      ...flow,
-      id: genId(),
-      name: `${flow.name} (copy)`,
-      status: "draft",
-      steps: flow.steps.map((s) => ({ ...s, id: genId() })),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    persist([copy, ...flows]);
+  const duplicateFlow = async (flow: EmailFlow) => {
+    const { error } = await supabase
+      .from("email_flows")
+      .insert({
+        name: `${flow.name} (copy)`,
+        description: flow.description,
+        audience: flow.audience,
+        status: "draft",
+        steps: flow.steps.map((s) => ({ ...s, id: genId() })),
+      });
+    if (error) { toast.error(error.message); return; }
+    invalidate();
     toast.success("Flow duplicated");
   };
 
-  const toggleFlowStatus = (flow: EmailFlow) => {
+  const toggleFlowStatus = async (flow: EmailFlow) => {
     const newStatus = flow.status === "active" ? "paused" : "active";
-    const updated = flows.map((f) =>
-      f.id === flow.id ? { ...f, status: newStatus as EmailFlow["status"], updatedAt: new Date().toISOString() } : f
-    );
-    persist(updated);
+    const { error } = await supabase
+      .from("email_flows")
+      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .eq("id", flow.id);
+    if (error) { toast.error(error.message); return; }
+    invalidate();
     if (editingFlow?.id === flow.id) {
       setEditingFlow({ ...editingFlow, status: newStatus as EmailFlow["status"] });
     }

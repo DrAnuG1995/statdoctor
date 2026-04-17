@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { StatusBadge } from "../shared/components/StatusBadge";
-import { ArrowLeft, Save, Trash2, DollarSign, CheckCircle2, TrendingUp, Pencil, Check, X, Mail, ExternalLink, Send } from "lucide-react";
+import { ArrowLeft, Save, Trash2, DollarSign, CheckCircle2, TrendingUp, Pencil, Check, X, Mail, ExternalLink, Send, Zap } from "lucide-react";
 import { ComposeEmailDialog } from "../shared/components/ComposeEmailDialog";
+import EnrollInFlowDialog from "../email/EnrollInFlowDialog";
 import { toast } from "sonner";
 import { logActivity } from "../shared/logActivity";
 import { useState, useEffect, useRef } from "react";
@@ -91,6 +92,7 @@ export default function HospitalDetailPage() {
   const [shiftCountInput, setShiftCountInput] = useState("");
   const [shiftRateInput, setShiftRateInput] = useState("");
   const [showCompose, setShowCompose] = useState(false);
+  const [showEnrollFlow, setShowEnrollFlow] = useState(false);
 
   const [form, setForm] = useState<Partial<Hospital>>({});
 
@@ -165,10 +167,16 @@ export default function HospitalDetailPage() {
           </div>
         </div>
         {hospital.contact_email && (
-          <Button variant="outline" size="sm" onClick={() => setShowCompose(true)}>
-            <Send className="mr-2 h-4 w-4" />
-            Email
-          </Button>
+          <>
+            <Button variant="outline" size="sm" onClick={() => setShowCompose(true)}>
+              <Send className="mr-2 h-4 w-4" />
+              Email
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowEnrollFlow(true)}>
+              <Zap className="mr-2 h-4 w-4 text-amber-500" />
+              Enroll in Flow
+            </Button>
+          </>
         )}
         <Button variant="outline" size="sm" onClick={handleSave} disabled={updateHospital.isPending}>
           <Save className="mr-2 h-4 w-4" />
@@ -698,15 +706,27 @@ export default function HospitalDetailPage() {
       </div>
 
       {hospital.contact_email && (
-        <ComposeEmailDialog
-          open={showCompose}
-          onOpenChange={setShowCompose}
-          recipients={[{
-            name: hospital.contact_name || hospital.name,
-            email: hospital.contact_email,
-            entityId: hospital.id,
-          }]}
-        />
+        <>
+          <ComposeEmailDialog
+            open={showCompose}
+            onOpenChange={setShowCompose}
+            recipients={[{
+              name: hospital.contact_name || hospital.name,
+              email: hospital.contact_email,
+              entityId: hospital.id,
+            }]}
+          />
+          <EnrollInFlowDialog
+            open={showEnrollFlow}
+            onOpenChange={setShowEnrollFlow}
+            recipients={[{
+              entityType: "hospital",
+              entityId: hospital.id,
+              name: hospital.name,
+              email: hospital.contact_email,
+            }]}
+          />
+        </>
       )}
     </div>
   );

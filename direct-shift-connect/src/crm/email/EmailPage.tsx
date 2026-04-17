@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import type { Email } from "../shared/types";
 
 const EmailFlowsPage = lazy(() => import("./EmailFlowsPage"));
+const EmailSequencesTab = lazy(() => import("./EmailSequencesTab"));
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -396,7 +397,7 @@ export default function EmailPage() {
       />
 
       {/* Summary cards */}
-      {activeTab !== "flows" && <div className="mb-6 grid gap-4 sm:grid-cols-4">
+      {activeTab !== "flows" && activeTab !== "enrollments" && <div className="mb-6 grid gap-4 sm:grid-cols-4">
         <Card>
           <CardContent className="pt-4 pb-3">
             <div className="flex items-center gap-2">
@@ -444,10 +445,14 @@ export default function EmailPage() {
             <Zap className="h-3.5 w-3.5" />
             Flows
           </TabsTrigger>
+          <TabsTrigger value="enrollments" className="flex items-center gap-1.5">
+            <Users className="h-3.5 w-3.5" />
+            Enrollments
+          </TabsTrigger>
         </TabsList>
 
         {/* Search — hide on flows tab */}
-        {activeTab !== "flows" && (
+        {activeTab !== "flows" && activeTab !== "enrollments" && (
           <div className="mt-4 mb-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -520,6 +525,12 @@ export default function EmailPage() {
         <TabsContent value="flows" className="mt-4">
           <Suspense fallback={<div className="py-12 text-center text-muted-foreground">Loading flows...</div>}>
             <EmailFlowsPage />
+          </Suspense>
+        </TabsContent>
+
+        <TabsContent value="enrollments" className="mt-4">
+          <Suspense fallback={<div className="py-12 text-center text-muted-foreground">Loading enrollments...</div>}>
+            <EmailSequencesTab />
           </Suspense>
         </TabsContent>
       </Tabs>

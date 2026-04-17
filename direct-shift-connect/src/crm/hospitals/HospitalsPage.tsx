@@ -1117,7 +1117,7 @@ export default function HospitalsPage() {
         </TabsContent>
 
         <TabsContent value="prospects" className="mt-4">
-          <ProspectsPage existingHospitalNames={existingHospitalNames} />
+          <ProspectsPage existingHospitalNames={existingHospitalNames} hospitalNameToId={new Map(hospitals.map((h) => [h.name.toLowerCase(), h.id]))} />
         </TabsContent>
       </Tabs>
 

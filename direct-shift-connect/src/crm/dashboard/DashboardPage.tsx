@@ -4,7 +4,7 @@ import { PageHeader } from "../shared/components/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, ComposedChart } from "recharts";
-import { Stethoscope, Building2, Handshake, ArrowUpRight, ArrowDownRight, CalendarClock, CheckCircle2, Percent, DollarSign } from "lucide-react";
+import { Stethoscope, Building2, Handshake, CalendarClock, CheckCircle2, Percent, DollarSign } from "lucide-react";
 
 // Parse "Registered: DD Mon YYYY" from doctor notes to get actual app registration date
 function parseRegisteredDate(notes: string | null): Date | null {
@@ -18,14 +18,16 @@ function parseRegisteredDate(notes: string | null): Date | null {
 function useMetrics() {
   return useQuery({
     queryKey: ["dashboard-metrics"],
+    refetchInterval: 30_000, // Auto-refresh every 30s for live numbers
+    staleTime: 15_000,
     queryFn: async () => {
       const now = new Date();
       const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
       const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
 
-      const [doctors, hospitals, deals, investors, hospitalsThisMonth, hospitalsLastMonth, dealsThisMonth, dealsLastMonth, pipelineStages, dealsWithStages, shiftsTotal, shiftsConfirmed, shiftsArchived, shiftsCancelled, shiftsActive] = await Promise.all([
-        supabase.from("doctors").select("status, notes"),
+      const [doctors, hospitals, deals, investors, hospitalsThisMonth, hospitalsLastMonth, dealsThisMonth, dealsLastMonth, pipelineStages, dealsWithStages, shiftsTotal, shiftsConfirmed, shiftsArchived, shiftsCancelled, shiftsActive, doctorsThisMonthQ, doctorsLastMonthQ] = await Promise.all([
+        supabase.from("doctors").select("status, notes, registered_date"),
         supabase.from("hospitals").select("status"),
         supabase.from("hospital_deals").select("value, name, notes, stage_id"),
         supabase.from("investors").select("status"),
@@ -40,6 +42,9 @@ function useMetrics() {
         supabase.from("shifts").select("*", { count: "exact", head: true }).eq("status", "Archived"),
         supabase.from("shifts").select("*", { count: "exact", head: true }).or("status.eq.Cancelled Doctor,status.eq.Cancelled Hospital"),
         supabase.from("shifts").select("*", { count: "exact", head: true }).eq("status", "Active"),
+        // Live count: doctors registered this month (using registered_date column first, fallback to notes)
+        supabase.from("doctors").select("*", { count: "exact", head: true }).gte("registered_date", thisMonthStart.toISOString()),
+        supabase.from("doctors").select("*", { count: "exact", head: true }).gte("registered_date", lastMonthStart.toISOString()).lte("registered_date", lastMonthEnd.toISOString()),
       ]);
 
       const doctorData = doctors.data || [];
@@ -47,10 +52,11 @@ function useMetrics() {
       const dealData = deals.data || [];
       const investorData = investors.data || [];
 
-      // Count doctors by actual app registration date (from notes field)
-      let doctorsThisMonthCount = 0;
-      let doctorsLastMonthCount = 0;
+      // Live count from registered_date column; supplement with notes-based parsing for doctors missing registered_date
+      let doctorsThisMonthCount = doctorsThisMonthQ.count || 0;
+      let doctorsLastMonthCount = doctorsLastMonthQ.count || 0;
       for (const doc of doctorData) {
+        if (doc.registered_date) continue; // already counted by the direct query
         const regDate = parseRegisteredDate(doc.notes);
         if (!regDate) continue;
         if (regDate >= thisMonthStart) doctorsThisMonthCount++;
@@ -154,33 +160,16 @@ function useMetrics() {
   });
 }
 
-function PercentBadge({ value, lastMonthValue }: { value: number | null | undefined; lastMonthValue?: number | null }) {
-  if (lastMonthValue == null) return null;
-  const diff = (value ?? 0) - lastMonthValue;
-  if (diff === 0 && lastMonthValue === 0) return null;
-  const isPositive = diff >= 0;
-  return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${isPositive ? "text-green-600" : "text-red-500"}`}>
-      {isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-      {isPositive ? "+" : ""}{diff} vs last month
-    </span>
-  );
-}
-
 function MetricCard({
   title,
   value,
   subtitle,
   icon: Icon,
-  thisMonth,
-  lastMonth,
 }: {
   title: string;
   value: string | number;
   subtitle: string;
   icon: React.ElementType;
-  thisMonth?: number | null;
-  lastMonth?: number | null;
 }) {
   return (
     <Card>
@@ -191,11 +180,6 @@ function MetricCard({
       <CardContent>
         <div className="text-2xl font-bold text-[#1F3A6A]">{value}</div>
         <p className="mt-1 text-xs text-muted-foreground">{subtitle}</p>
-        {thisMonth != null && lastMonth != null && (
-          <div className="mt-2">
-            <PercentBadge value={thisMonth} lastMonthValue={lastMonth} />
-          </div>
-        )}
       </CardContent>
     </Card>
   );
@@ -234,16 +218,12 @@ export default function DashboardPage() {
           value={isLoading ? "..." : metrics?.totalHospitals ?? 0}
           subtitle={`${metrics?.hospitalAccounts ?? 0} accounts · ${metrics?.hospitalsPipeline ?? 0} in pipeline`}
           icon={Building2}
-          thisMonth={metrics?.hospitalsThisMonth}
-          lastMonth={metrics?.hospitalsLastMonth}
         />
         <MetricCard
           title="Total Doctors"
           value={isLoading ? "..." : metrics?.totalDoctors ?? 0}
           subtitle={`${metrics?.doctorsThisMonth ?? 0} new this month`}
           icon={Stethoscope}
-          thisMonth={metrics?.doctorsThisMonth}
-          lastMonth={metrics?.doctorsLastMonth}
         />
       </div>
 

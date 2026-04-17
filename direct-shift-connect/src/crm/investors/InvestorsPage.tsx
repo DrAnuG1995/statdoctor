@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Search, FileText, Mail, DollarSign, Handshake, Pencil, Plus, X, Check } from "lucide-react";
+import { TrendingUp, Search, FileText, Mail, DollarSign, Handshake, Pencil, Plus, X, Check, Upload, AlertCircle } from "lucide-react";
+import * as XLSX from "xlsx";
 
 const InvestorBulkEmail = lazy(() => import("./BulkEmail"));
 import { toast } from "sonner";
@@ -226,13 +227,21 @@ const investorColumns: Column<Investor>[] = [
   },
 ];
 
-function InvestorsList() {
+function InvestorsList({ externalShowAdd, onExternalShowAddChange }: { externalShowAdd?: boolean; onExternalShowAddChange?: (v: boolean) => void } = {}) {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedInvestor, setSelectedInvestor] = useState<Investor | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Sync external "Add Investor" trigger from parent PageHeader
+  useEffect(() => {
+    if (externalShowAdd) {
+      setShowAddDialog(true);
+      onExternalShowAddChange?.(false);
+    }
+  }, [externalShowAdd, onExternalShowAddChange]);
 
   const { data: investors = [], isLoading } = useInvestors(search, statusFilter);
 
@@ -1042,9 +1051,343 @@ function InvestorUpdates() {
   );
 }
 
+function parseExcel(buffer: ArrayBuffer): Record<string, string>[] {
+  const workbook = XLSX.read(buffer, { type: "array" });
+  const sheetName = workbook.SheetNames[0];
+  if (!sheetName) return [];
+  const sheet = workbook.Sheets[sheetName];
+  const raw = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, { defval: "" });
+  return raw.map((row) => {
+    const cleaned: Record<string, string> = {};
+    for (const [key, val] of Object.entries(row)) {
+      cleaned[key.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_")] = String(val ?? "");
+    }
+    return cleaned;
+  });
+}
+
+function parseCSV(text: string): Record<string, string>[] {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(",").map((h) => h.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_"));
+  return lines.slice(1).filter((l) => l.trim()).map((line) => {
+    const values: string[] = [];
+    let current = "";
+    let inQuotes = false;
+    for (const ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; continue; }
+      if (ch === "," && !inQuotes) { values.push(current.trim()); current = ""; continue; }
+      current += ch;
+    }
+    values.push(current.trim());
+    const row: Record<string, string> = {};
+    headers.forEach((h, i) => { row[h] = values[i] || ""; });
+    return row;
+  });
+}
+
+function mapCSVRow(row: Record<string, string>): Partial<Investor> {
+  const name = row.name || row.investor || row.company_name || row.investor_name || "";
+  const company = row.company || row.partner || row.partner_name || row.firm || "";
+  const email = row.email || row.contact_email || row.e_mail || "";
+  const phone = row.phone || row.contact_phone || row.telephone || "";
+  const status = row.status || "pending";
+  const pipeline = row.pipeline || row.stage || row.pipeline_stage || "contacted";
+  const notes = row.notes || row.note || "";
+  const investmentStr = row.investment_amount || row.deposited || row.amount || row.invested || "";
+  const investment_amount = investmentStr ? parseFloat(investmentStr.replace(/[,$\s]/g, "")) || 0 : 0;
+
+  const mappedStatus: InvestorStatus = ["active", "pending", "cold"].includes(status.toLowerCase())
+    ? (status.toLowerCase() as InvestorStatus)
+    : "pending";
+
+  return {
+    name,
+    company: company || null,
+    email: email || null,
+    phone: phone || null,
+    status: mappedStatus,
+    investment_amount: investment_amount || 0,
+    notes: `${pipeline} | ${notes}`,
+  };
+}
+
+function BulkUploadDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [csvText, setCsvText] = useState("");
+  const [parsed, setParsed] = useState<Partial<Investor>[]>([]);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState<{ added: number; failed: number } | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const reset = () => {
+    setCsvText("");
+    setParsed([]);
+    setErrors([]);
+    setResult(null);
+    setUploading(false);
+  };
+
+  const handleClose = () => {
+    reset();
+    onClose();
+  };
+
+  const isExcel = (name: string) => /\.(xlsx|xls|xlsm)$/i.test(name);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (isExcel(file.name)) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const buffer = ev.target?.result as ArrayBuffer;
+        const rows = parseExcel(buffer);
+        processRows(rows);
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result as string;
+        setCsvText(text);
+        processRows(parseCSV(text));
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const processRows = (rows: Record<string, string>[]) => {
+    setResult(null);
+    const errs: string[] = [];
+    const mapped: Partial<Investor>[] = [];
+
+    if (rows.length === 0) {
+      errs.push("No data rows found. Make sure the first row has column headers.");
+      setErrors(errs);
+      setParsed([]);
+      return;
+    }
+
+    rows.forEach((row, i) => {
+      const investor = mapCSVRow(row);
+      if (!investor.name) {
+        errs.push(`Row ${i + 2}: Missing name — skipped`);
+      } else {
+        mapped.push(investor);
+      }
+    });
+
+    setParsed(mapped);
+    setErrors(errs);
+  };
+
+  const handlePasteProcess = () => {
+    processRows(parseCSV(csvText));
+  };
+
+  const handleUpload = async () => {
+    if (parsed.length === 0) return;
+    setUploading(true);
+    let added = 0;
+    let failed = 0;
+
+    // Insert in batches of 20
+    for (let i = 0; i < parsed.length; i += 20) {
+      const batch = parsed.slice(i, i + 20);
+      const { error } = await supabase.from("investors").insert(batch);
+      if (error) {
+        failed += batch.length;
+      } else {
+        added += batch.length;
+      }
+    }
+
+    setResult({ added, failed });
+    setUploading(false);
+    queryClient.invalidateQueries({ queryKey: ["investors"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+
+    if (added > 0) {
+      toast.success(`${added} investor${added !== 1 ? "s" : ""} added`);
+    }
+    if (failed > 0) {
+      toast.error(`${failed} investor${failed !== 1 ? "s" : ""} failed to upload`);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Upload className="h-5 w-5" />
+            Bulk Upload Investors
+          </DialogTitle>
+        </DialogHeader>
+
+        {result ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border p-6 text-center">
+              <div className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full ${result.failed === 0 ? "bg-green-100" : "bg-amber-100"}`}>
+                {result.failed === 0 ? (
+                  <Check className="h-6 w-6 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-6 w-6 text-amber-600" />
+                )}
+              </div>
+              <h3 className="font-semibold text-gray-900">Upload Complete</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {result.added} investor{result.added !== 1 ? "s" : ""} added
+                {result.failed > 0 && `, ${result.failed} failed`}
+              </p>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={reset}>Upload More</Button>
+              <Button className="bg-[#1F3A6A] hover:bg-[#1F3A6A]/90" onClick={handleClose}>Done</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {/* Instructions */}
+            <div className="rounded-md border bg-gray-50 p-3">
+              <p className="text-sm text-muted-foreground">
+                Upload a CSV or Excel (.xlsx) file, or paste CSV data. Required column: <strong>name</strong>.
+                Optional: company, email, phone, status, pipeline, notes, investment_amount.
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Example: <code className="rounded bg-white px-1 py-0.5">name,email,company,pipeline,notes</code>
+              </p>
+            </div>
+
+            {/* File upload */}
+            <div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,.txt,.tsv,.xlsx,.xls,.xlsm"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                className="w-full border-dashed"
+                onClick={() => fileRef.current?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Choose CSV or Excel File
+              </Button>
+            </div>
+
+            {/* Or paste */}
+            <div className="relative">
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 border-t" />
+              <div className="relative flex justify-center">
+                <span className="bg-white px-2 text-xs text-muted-foreground">or paste CSV data</span>
+              </div>
+            </div>
+
+            <Textarea
+              placeholder={"name,email,company,pipeline,notes\nJohn Doe,john@example.com,Acme VC,contacted,Met at conference"}
+              rows={5}
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+            />
+
+            {csvText && parsed.length === 0 && errors.length === 0 && (
+              <Button variant="outline" className="w-full" onClick={handlePasteProcess}>
+                Parse CSV Data
+              </Button>
+            )}
+
+            {/* Errors */}
+            {errors.length > 0 && (
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
+                <h4 className="text-sm font-medium text-amber-800 flex items-center gap-1.5">
+                  <AlertCircle className="h-4 w-4" />
+                  {errors.length} warning{errors.length !== 1 ? "s" : ""}
+                </h4>
+                <ul className="mt-1 space-y-0.5 text-xs text-amber-700">
+                  {errors.slice(0, 5).map((err, i) => (
+                    <li key={i}>{err}</li>
+                  ))}
+                  {errors.length > 5 && <li>...and {errors.length - 5} more</li>}
+                </ul>
+              </div>
+            )}
+
+            {/* Preview */}
+            {parsed.length > 0 && (
+              <div>
+                <h4 className="text-sm font-medium mb-2">
+                  Preview — {parsed.length} investor{parsed.length !== 1 ? "s" : ""} ready to upload
+                </h4>
+                <div className="max-h-48 overflow-y-auto rounded-md border">
+                  <table className="w-full text-sm">
+                    <thead className="bg-gray-50 sticky top-0">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium text-xs">#</th>
+                        <th className="px-3 py-2 text-left font-medium text-xs">Name</th>
+                        <th className="px-3 py-2 text-left font-medium text-xs">Email</th>
+                        <th className="px-3 py-2 text-left font-medium text-xs">Company</th>
+                        <th className="px-3 py-2 text-left font-medium text-xs">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {parsed.slice(0, 20).map((inv, i) => (
+                        <tr key={i} className="hover:bg-gray-50">
+                          <td className="px-3 py-1.5 text-xs text-muted-foreground">{i + 1}</td>
+                          <td className="px-3 py-1.5 font-medium">{inv.name}</td>
+                          <td className="px-3 py-1.5 text-muted-foreground">{inv.email || "-"}</td>
+                          <td className="px-3 py-1.5 text-muted-foreground">{inv.company || "-"}</td>
+                          <td className="px-3 py-1.5">
+                            <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs capitalize">{inv.status}</span>
+                          </td>
+                        </tr>
+                      ))}
+                      {parsed.length > 20 && (
+                        <tr>
+                          <td colSpan={5} className="px-3 py-2 text-center text-xs text-muted-foreground">
+                            ...and {parsed.length - 20} more
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={handleClose}>Cancel</Button>
+              <Button
+                className="bg-[#1F3A6A] hover:bg-[#1F3A6A]/90"
+                disabled={parsed.length === 0 || uploading}
+                onClick={handleUpload}
+              >
+                {uploading ? "Uploading..." : `Upload ${parsed.length} Investor${parsed.length !== 1 ? "s" : ""}`}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export default function InvestorsPage() {
   const [activeTab, setActiveTab] = useState("investors");
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showBulkUpload, setShowBulkUpload] = useState(false);
 
   return (
     <div>
@@ -1054,6 +1397,19 @@ export default function InvestorsPage() {
         actionLabel="Add Investor"
         onAction={() => setShowAddDialog(true)}
       />
+
+      {/* Extra action buttons */}
+      <div className="mb-4 flex gap-2 -mt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-1.5"
+          onClick={() => setShowBulkUpload(true)}
+        >
+          <Upload className="h-3.5 w-3.5" />
+          Bulk Upload
+        </Button>
+      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
         <TabsList>
@@ -1066,7 +1422,7 @@ export default function InvestorsPage() {
         </TabsList>
 
         <TabsContent value="investors" className="mt-4">
-          <InvestorsList />
+          <InvestorsList externalShowAdd={showAddDialog} onExternalShowAddChange={setShowAddDialog} />
         </TabsContent>
 
         <TabsContent value="updates" className="mt-4">
@@ -1079,6 +1435,8 @@ export default function InvestorsPage() {
           </Suspense>
         </TabsContent>
       </Tabs>
+
+      <BulkUploadDialog open={showBulkUpload} onClose={() => setShowBulkUpload(false)} />
     </div>
   );
 }

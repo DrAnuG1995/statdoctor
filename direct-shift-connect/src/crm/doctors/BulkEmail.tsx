@@ -353,16 +353,68 @@ export default function BulkEmail() {
     toast.success(`Copied ${selectedEmails.length} email addresses`);
   };
 
-  const handleOpenMailto = () => {
+  const handleOpenGmailCompose = () => {
     const subjectEncoded = encodeURIComponent(
       personalize(subject, previewDoctor, templateVars)
     );
     const bodyEncoded = encodeURIComponent(
       personalize(body, previewDoctor, templateVars)
     );
-    const mailto = `mailto:?bcc=${encodeURIComponent(selectedEmails.join(","))}&subject=${subjectEncoded}&body=${bodyEncoded}`;
-    window.location.href = mailto;
-    toast.success("Opened in email client");
+    const bcc = encodeURIComponent(selectedEmails.join(","));
+    // Gmail compose URL supports longer content than mailto:
+    const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&bcc=${bcc}&su=${subjectEncoded}&body=${bodyEncoded}`;
+    window.open(gmailUrl, "_blank");
+    toast.success("Opened Gmail compose window");
+  };
+
+  const [creatingDrafts, setCreatingDrafts] = useState(false);
+  const [draftsCreated, setDraftsCreated] = useState(0);
+
+  const handleCreateDrafts = async () => {
+    if (selectedDoctors.length === 0 || !subject) return;
+    setCreatingDrafts(true);
+    setDraftsCreated(0);
+    let success = 0;
+    let failed = 0;
+
+    for (const doctor of selectedDoctors) {
+      const personalizedSubject = personalize(subject, doctor, templateVars);
+      const personalizedBody = personalize(body, doctor, templateVars);
+
+      try {
+        const { error } = await supabase.from("emails").insert({
+          gmail_id: `draft-bulk-${Date.now()}-${doctor.id}`,
+          thread_id: `draft-thread-bulk-${Date.now()}-${doctor.id}`,
+          subject: personalizedSubject,
+          from_address: "me",
+          from_name: "Me",
+          to_addresses: [doctor.email],
+          cc_addresses: [],
+          date: new Date().toISOString(),
+          labels: ["DRAFT"],
+          body_text: personalizedBody,
+          body_html: null,
+          snippet: personalizedBody.slice(0, 100),
+          is_read: true,
+          has_attachments: false,
+          contact_type: "doctor",
+          contact_id: doctor.id,
+          synced_at: new Date().toISOString(),
+        });
+        if (error) throw error;
+        success++;
+      } catch {
+        failed++;
+      }
+      setDraftsCreated(success + failed);
+    }
+
+    setCreatingDrafts(false);
+    if (success > 0) {
+      toast.success(`Created ${success} personalized draft${success !== 1 ? "s" : ""}${failed > 0 ? ` (${failed} failed)` : ""}`);
+    } else {
+      toast.error("Failed to create drafts");
+    }
   };
 
   // Detect template variables in subject + body
@@ -669,13 +721,25 @@ export default function BulkEmail() {
           </Button>
 
           <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCreateDrafts}
+            disabled={selectedEmails.length === 0 || !subject || creatingDrafts}
+          >
+            <Mail className="mr-1.5 h-3.5 w-3.5" />
+            {creatingDrafts
+              ? `Creating ${draftsCreated}/${selectedDoctors.length}...`
+              : `Create ${selectedEmails.length} Draft${selectedEmails.length !== 1 ? "s" : ""}`}
+          </Button>
+
+          <Button
             size="sm"
             className="bg-[#1F3A6A] hover:bg-[#1F3A6A]/90"
-            onClick={handleOpenMailto}
+            onClick={handleOpenGmailCompose}
             disabled={selectedEmails.length === 0 || !subject}
           >
             <Send className="mr-1.5 h-3.5 w-3.5" />
-            Open in Email Client
+            Open in Gmail
           </Button>
         </div>
       </div>
