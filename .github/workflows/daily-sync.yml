@@ -20,11 +20,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          cache-dependency-path: direct-shift-connect/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci --prefer-offline --no-audit
+      - name: Install sync deps only
+        run: npm install --no-save --no-audit @supabase/supabase-js@^2
 
       - name: Run daily sync
         env:
