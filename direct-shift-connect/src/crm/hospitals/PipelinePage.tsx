@@ -384,13 +384,54 @@ export default function PipelinePage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const deleteHospitalEverywhere = useMutation({
+    mutationFn: async (hospitalId: string) => {
+      // Cascade: delete all deals for the hospital, then the hospital row
+      const { error: dealsErr } = await supabase
+        .from("hospital_deals")
+        .delete()
+        .eq("hospital_id", hospitalId);
+      if (dealsErr) throw dealsErr;
+      const { error } = await supabase
+        .from("hospitals")
+        .delete()
+        .eq("id", hospitalId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pipeline-deals"] });
+      queryClient.invalidateQueries({ queryKey: ["hospitals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+      toast.success("Hospital deleted");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const handleDeleteDeal = useCallback(
     (dealId: string) => {
-      if (window.confirm("Remove this deal from the pipeline?")) {
-        deleteDeal.mutate(dealId);
+      const deal = deals.find((d) => d.id === dealId);
+      const hospital = deal?.hospital;
+      const hospitalName = hospital?.name || deal?.name || "this hospital";
+
+      if (hospital?.id) {
+        // Offer two choices: delete just the deal, or delete the hospital entirely
+        const msg =
+          `Delete "${hospitalName}"?\n\n` +
+          `OK = permanently delete the hospital and ALL its pipeline deals\n` +
+          `Cancel = keep the hospital (this does nothing)\n\n` +
+          `To just move the deal to a different stage, drag it instead.`;
+        if (window.confirm(msg)) {
+          deleteHospitalEverywhere.mutate(hospital.id);
+        }
+      } else {
+        // Orphan deal (no hospital linked) — delete just the deal
+        if (window.confirm(`Remove "${hospitalName}" from the pipeline?`)) {
+          deleteDeal.mutate(dealId);
+        }
       }
     },
-    [deleteDeal],
+    [deleteDeal, deleteHospitalEverywhere, deals],
   );
 
   const addDeal = useMutation({

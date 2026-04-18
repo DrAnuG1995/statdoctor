@@ -14,8 +14,9 @@ import { toast } from "sonner";
 import { logActivity } from "../shared/logActivity";
 import { ComposeEmailDialog } from "../shared/components/ComposeEmailDialog";
 import type { HospitalStatus } from "../shared/types";
-import { AU_STATES, STATE_COLORS, extractState } from "../shared/australianStates";
+import { AU_STATES, STATE_COLORS, STATE_LABELS, extractState } from "../shared/australianStates";
 import { EditableProspectCell } from "./EditableProspectCell";
+import { Trash2 } from "lucide-react";
 
 // ── Unified Prospect type ───────────────────────────────────────────
 
@@ -260,55 +261,81 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   const [undoing, setUndoing] = useState(false);
 
   // Fetch prospect overrides — lets users edit email/contact/etc inline
-  // without modifying source code.
-  const { data: overrides = [] } = useQuery({
+  // and hide prospects without modifying source code.
+  type Override = {
+    hospital_name: string;
+    email: string | null;
+    contact: string | null;
+    role: string | null;
+    location: string | null;
+    type: string | null;
+    hidden: boolean | null;
+  };
+  const { data: overrides = [] } = useQuery<Override[]>({
     queryKey: ["prospect-overrides"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("prospect_overrides")
         .select("*");
-      // If the table doesn't exist yet, silently return empty — migration not applied
-      if (error) return [] as {
-        hospital_name: string;
-        email: string | null;
-        contact: string | null;
-        role: string | null;
-        location: string | null;
-        type: string | null;
-      }[];
-      return data as {
-        hospital_name: string;
-        email: string | null;
-        contact: string | null;
-        role: string | null;
-        location: string | null;
-        type: string | null;
-      }[];
+      if (error) return [];
+      return (data || []) as Override[];
     },
   });
 
   // Build override map for quick lookup by hospital name (case-insensitive)
   const overrideMap = useMemo(() => {
-    const m = new Map<string, typeof overrides[number]>();
+    const m = new Map<string, Override>();
     overrides.forEach((o) => m.set(o.hospital_name.toLowerCase(), o));
     return m;
   }, [overrides]);
 
-  // ALL_PROSPECTS merged with overrides
+  // ALL_PROSPECTS merged with overrides, hidden rows filtered out
   const prospectsWithOverrides = useMemo(() => {
-    return ALL_PROSPECTS.map((p) => {
-      const ov = overrideMap.get(p.hospital.toLowerCase());
-      if (!ov) return p;
-      return {
-        ...p,
-        email: ov.email ?? p.email,
-        contact: ov.contact ?? p.contact,
-        role: ov.role ?? p.role,
-        location: ov.location ?? p.location,
-        type: ov.type ?? p.type,
-      };
-    });
+    return ALL_PROSPECTS
+      .map((p) => {
+        const ov = overrideMap.get(p.hospital.toLowerCase());
+        if (!ov) return p;
+        return {
+          ...p,
+          email: ov.email ?? p.email,
+          contact: ov.contact ?? p.contact,
+          role: ov.role ?? p.role,
+          location: ov.location ?? p.location,
+          type: ov.type ?? p.type,
+          _hidden: !!ov.hidden,
+        };
+      })
+      .filter((p) => !(p as { _hidden?: boolean })._hidden);
   }, [overrideMap]);
+
+  // Mutation: hide a prospect (soft-delete via prospect_overrides.hidden)
+  const hideProspect = useMutation({
+    mutationFn: async (hospitalName: string) => {
+      const { error } = await supabase.from("prospect_overrides").upsert(
+        {
+          hospital_name: hospitalName,
+          hidden: true,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "hospital_name" },
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["prospect-overrides"] });
+      toast.success("Prospect hidden");
+    },
+    onError: (err: Error) => {
+      const msg = err?.message || String(err);
+      if (msg.includes("Could not find the table") || msg.includes("hidden")) {
+        toast.error(
+          "Paste migrations/005_prospect_overrides.sql into Supabase SQL Editor first",
+        );
+      } else {
+        toast.error(`Hide failed: ${msg}`);
+      }
+    },
+  });
 
   // Fetch pipeline stages for import
   const { data: stages = [] } = useQuery({
@@ -359,10 +386,11 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
     return list;
   }, [prospectsWithOverrides, search, sourceFilter, typeFilter]);
 
-  // State counts (for dropdown & stratify pills)
+  // State counts (for dropdown & stratify pills) — pass name/type so
+  // telehealth auto-detection fires
   const stateCounts = useMemo(() => {
     return filteredExStateDim.reduce<Record<string, number>>((acc, p) => {
-      const s = extractState(p.location);
+      const s = extractState(p.location, null, p.hospital, p.type);
       acc[s] = (acc[s] || 0) + 1;
       return acc;
     }, {});
@@ -372,7 +400,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   const filtered = useMemo(() => {
     if (stateFilter === "all") return filteredExStateDim;
     return filteredExStateDim.filter(
-      (p) => extractState(p.location) === stateFilter
+      (p) => extractState(p.location, null, p.hospital, p.type) === stateFilter
     );
   }, [filteredExStateDim, stateFilter]);
 
@@ -673,7 +701,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
                 if (count === 0) return null;
                 return (
                   <SelectItem key={s} value={s}>
-                    {s} ({count})
+                    {STATE_LABELS[s]} ({count})
                   </SelectItem>
                 );
               })}
@@ -768,7 +796,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
                   : `${STATE_COLORS[s]} hover:opacity-80`
               }`}
             >
-              {s} ({count})
+              {STATE_LABELS[s]} ({count})
             </button>
           );
         })}
@@ -933,6 +961,20 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
                         <Send className="h-3.5 w-3.5 text-[#1F3A6A]" />
                       </Button>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 opacity-40 hover:opacity-100 hover:bg-red-50"
+                      title="Remove this prospect from the list"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Remove "${row.hospital}" from the prospects list?\n\nThis hides it from the CRM. You can restore it later by clearing its override row in Supabase.`)) {
+                          hideProspect.mutate(row.hospital);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    </Button>
                   </div>
                 </div>
               );

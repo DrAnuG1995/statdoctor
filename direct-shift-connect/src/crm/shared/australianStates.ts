@@ -10,6 +10,7 @@ export const AU_STATES = [
   "TAS",
   "ACT",
   "NT",
+  "TELE",
 ] as const;
 
 export type AuState = (typeof AU_STATES)[number];
@@ -23,27 +24,61 @@ export const STATE_COLORS: Record<string, string> = {
   TAS: "bg-emerald-100 text-emerald-800 border-emerald-200",
   ACT: "bg-purple-100 text-purple-800 border-purple-200",
   NT: "bg-orange-100 text-orange-800 border-orange-200",
+  TELE: "bg-fuchsia-100 text-fuchsia-800 border-fuchsia-200",
   NZ: "bg-teal-100 text-teal-800 border-teal-200",
   "-": "bg-gray-100 text-gray-600 border-gray-200",
+};
+
+// Labels for the pills/dropdowns (TELE is a category, not a state)
+export const STATE_LABELS: Record<string, string> = {
+  NSW: "NSW",
+  VIC: "VIC",
+  QLD: "QLD",
+  WA: "WA",
+  SA: "SA",
+  TAS: "TAS",
+  ACT: "ACT",
+  NT: "NT",
+  TELE: "Telehealth",
+  NZ: "NZ",
+  "-": "Unknown",
 };
 
 /**
  * Extract an Australian state abbreviation from a hospital row.
  * Priority:
  *   1. Explicit [STATE:XX] tag in notes field (user override)
- *   2. State parsed from location string
- *   3. "-" if neither matches
+ *   2. Telehealth keywords in name/type/location → TELE
+ *   3. State parsed from location string
+ *   4. "-" if nothing matches
+ *
+ * Optional 3rd/4th args (name, type) let telehealth detection fire even
+ * when the location string is a real place (e.g. WAVED has location
+ * "Perth, WA" but is a virtual ED).
  */
 export function extractState(
   location: string | null | undefined,
-  notes?: string | null | undefined
+  notes?: string | null | undefined,
+  name?: string | null | undefined,
+  type?: string | null | undefined
 ): string {
-  // 1. Check for explicit tag in notes
+  // 1. Explicit override tag in notes
   if (notes) {
-    const tagMatch = notes.match(/\[STATE:(NSW|VIC|QLD|WA|SA|TAS|ACT|NT|NZ)\]/);
+    const tagMatch = notes.match(
+      /\[STATE:(NSW|VIC|QLD|WA|SA|TAS|ACT|NT|NZ|TELE)\]/
+    );
     if (tagMatch) return tagMatch[1];
   }
-  // 2. Parse location string
+  // 2. Telehealth auto-detection — check name, type, location
+  const telehealthHay = [location, type, name].filter(Boolean).join(" ");
+  if (
+    /\b(telehealth|virtual ED|virtual emergency|telemedicine|televideo)\b/i.test(
+      telehealthHay
+    )
+  ) {
+    return "TELE";
+  }
+  // 3. Parse location
   if (!location) return "-";
   if (/\bNZ\b|New Zealand/i.test(location)) return "NZ";
   const match = location.match(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/);
@@ -61,6 +96,8 @@ export function setStateInNotes(
   let cleaned = (existingNotes || "")
     .replace(/\[STATE:[A-Z]+\]\s*/g, "")
     .trim();
+  // Accept TELE, NZ, or any AU state
+
   if (!state || state === "-") {
     return cleaned || null;
   }

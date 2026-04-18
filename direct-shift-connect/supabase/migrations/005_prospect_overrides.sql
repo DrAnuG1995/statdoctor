@@ -13,9 +13,14 @@ CREATE TABLE IF NOT EXISTS public.prospect_overrides (
   location      TEXT,
   type          TEXT,
   notes         TEXT,
+  hidden        BOOLEAN NOT NULL DEFAULT FALSE,
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_by    TEXT
 );
+
+-- If table already existed from an earlier migration, make sure the hidden column is there
+ALTER TABLE public.prospect_overrides
+  ADD COLUMN IF NOT EXISTS hidden BOOLEAN NOT NULL DEFAULT FALSE;
 
 ALTER TABLE public.prospect_overrides ENABLE ROW LEVEL SECURITY;
 

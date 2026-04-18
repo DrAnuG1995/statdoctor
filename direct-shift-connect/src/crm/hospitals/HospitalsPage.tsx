@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { logActivity } from "../shared/logActivity";
 import { ComposeEmailDialog } from "../shared/components/ComposeEmailDialog";
 import type { Hospital, HospitalStatus, PipelineStage, HospitalDeal } from "../shared/types";
-import { AU_STATES, STATE_COLORS, extractState, setStateInNotes } from "../shared/australianStates";
+import { AU_STATES, STATE_COLORS, STATE_LABELS, extractState, setStateInNotes } from "../shared/australianStates";
 import PipelinePage from "./PipelinePage";
 import ProspectsPage from "./ProspectsPage";
 
@@ -579,7 +579,7 @@ function StateCell({
   row: HospitalWithStage;
   onUpdate: (id: string, state: string) => void;
 }) {
-  const currentState = extractState(row.location, row.notes);
+  const currentState = extractState(row.location, row.notes, row.name, row.type);
   return (
     <Select
       value={currentState}
@@ -594,7 +594,7 @@ function StateCell({
       <SelectContent onClick={(e) => e.stopPropagation()}>
         {AU_STATES.map((s) => (
           <SelectItem key={s} value={s}>
-            {s}
+            {STATE_LABELS[s]}
           </SelectItem>
         ))}
         <SelectItem value="NZ">NZ</SelectItem>
@@ -946,7 +946,7 @@ export default function HospitalsPage() {
 
   // State breakdown computed from all hospitals matching search/status (before state filter)
   const stateCounts = allHospitals.reduce<Record<string, number>>((acc, h) => {
-    const s = extractState(h.location, h.notes);
+    const s = extractState(h.location, h.notes, h.name, h.type);
     acc[s] = (acc[s] || 0) + 1;
     return acc;
   }, {});
@@ -956,7 +956,8 @@ export default function HospitalsPage() {
     stateFilter === "all"
       ? allHospitals
       : allHospitals.filter(
-          (h) => extractState(h.location, h.notes) === stateFilter
+          (h) =>
+            extractState(h.location, h.notes, h.name, h.type) === stateFilter
         );
 
   // Mutation to update a hospital's state (stored as a tag in notes)
@@ -1029,7 +1030,22 @@ export default function HospitalsPage() {
     getEmail: (id: string) => hospitalMap.get(id)?.contact_email || null,
     getName: (id: string) => hospitalMap.get(id)?.name || "",
     showEmail: true,
-    showDelete: false,
+    showDelete: true,
+    onDelete: async (ids: string[]) => {
+      // Delete associated pipeline deals first (FK reference), then hospitals
+      const { error: dealsErr } = await supabase
+        .from("hospital_deals")
+        .delete()
+        .in("hospital_id", ids);
+      if (dealsErr) throw dealsErr;
+      const { error } = await supabase.from("hospitals").delete().in("id", ids);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["hospitals"] });
+      queryClient.invalidateQueries({ queryKey: ["pipeline-deals"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+      toast.success(`${ids.length} hospital${ids.length !== 1 ? "s" : ""} deleted`);
+    },
   };
 
   // Fetch pipeline stages for the Add Hospital form
@@ -1172,11 +1188,15 @@ export default function HospitalsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All states</SelectItem>
-                {AU_STATES.map((s) => (
-                  <SelectItem key={s} value={s}>
-                    {s} {stateCounts[s] ? `(${stateCounts[s]})` : ""}
-                  </SelectItem>
-                ))}
+                {AU_STATES.map((s) => {
+                  const count = stateCounts[s] || 0;
+                  if (count === 0) return null;
+                  return (
+                    <SelectItem key={s} value={s}>
+                      {STATE_LABELS[s]} ({count})
+                    </SelectItem>
+                  );
+                })}
                 {stateCounts["-"] > 0 && (
                   <SelectItem value="-">Unknown ({stateCounts["-"]})</SelectItem>
                 )}
@@ -1213,7 +1233,7 @@ export default function HospitalsPage() {
                       : `${STATE_COLORS[s]} hover:opacity-80`
                   }`}
                 >
-                  {s} ({count})
+                  {STATE_LABELS[s]} ({count})
                 </button>
               );
             })}
