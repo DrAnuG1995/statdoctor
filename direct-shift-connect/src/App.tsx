@@ -9,6 +9,11 @@ import { CrmRoutes } from "./crm/routes";
 
 const queryClient = new QueryClient();
 
+// Use Vite's built-in base so dev (`/`) and prod (`/statdoctor/`) both work
+// without hardcoding the sub-path. import.meta.env.BASE_URL ends with a trailing
+// slash; BrowserRouter expects the basename without one.
+const basename = import.meta.env.BASE_URL.replace(/\/$/, "") || "/";
+
 function CrmFallback() {
   return (
     <div className="flex h-screen items-center justify-center">
@@ -22,7 +27,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      <BrowserRouter basename={basename}>
         <Suspense fallback={<CrmFallback />}>
           <Routes>
             <Route path="/" element={<Navigate to="/crm/dashboard" replace />} />

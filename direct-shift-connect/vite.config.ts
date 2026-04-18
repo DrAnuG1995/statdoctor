@@ -5,6 +5,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Only apply the GitHub Pages sub-path in production builds
+  // (dranug1995.github.io/statdoctor/). Dev server runs at root
+  // so local URLs work as /crm/... unmodified.
+  base: mode === "production" ? "/statdoctor/" : "/",
   server: {
     host: "::",
     port: 8080,
