@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { logActivity } from "../shared/logActivity";
 import { ComposeEmailDialog } from "../shared/components/ComposeEmailDialog";
 import type { HospitalStatus } from "../shared/types";
+import { AU_STATES, STATE_COLORS, extractState } from "../shared/australianStates";
+import { EditableProspectCell } from "./EditableProspectCell";
 
 // ── Unified Prospect type ───────────────────────────────────────────
 
@@ -31,11 +33,11 @@ interface Prospect {
 // ── MedRecruit Hospital List (139 hospitals) ────────────────────────
 
 const MEDRECRUIT_HOSPITALS: Prospect[] = [
-  { hospital: "Royal Adelaide Hospital / Queen Elizabeth Hospital / Flinders Medical Centre", location: "Adelaide, SA", type: "Tertiary/Teaching", email: "Health.CALHNMedicalWorkforce@sa.gov.au", health_service: "Central Adelaide LHN", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Royal Adelaide Hospital / Queen Elizabeth Hospital / Flinders Medical Centre", location: "Adelaide, SA", type: "Tertiary/Teaching", email: "Health.CALHNTMOUnit@sa.gov.au", health_service: "Central Adelaide LHN", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Albury Wodonga Health - Albury Campus", location: "Albury, NSW", type: "Regional", email: "careers@awh.org.au", health_service: "Albury Wodonga Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Alice Springs Hospital", location: "Alice Springs, NT", type: "Regional", email: "medicalrecruitment.doh@nt.gov.au", health_service: "NT Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Armidale Rural Referral Hospital", location: "Armidale, NSW", type: "Rural Referral", email: "HNELHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "St John of God Midland Public Hospital", location: "Ascot, WA", type: "Public/Private", email: "recruitment.midland@sjog.org.au", health_service: "St John of God Health Care", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Alice Springs Hospital", location: "Alice Springs, NT", type: "Regional", email: "MedicalRecruitmentASH@nt.gov.au", health_service: "NT Health", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Armidale Rural Referral Hospital", location: "Armidale, NSW", type: "Rural Referral", email: "HNELHD-JMOUnit@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "St John of God Midland Public Hospital", location: "Ascot, WA", type: "Public/Private", email: "midland.medicaladmin@sjog.org.au", health_service: "St John of God Health Care", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Ashburton Hospital", location: "Ashburton, South Island NZ", type: "Rural", email: "Amy.Walker@cdhb.health.nz", health_service: "Te Whatu Ora - Canterbury", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Auburn Hospital", location: "Auburn, NSW", type: "Metropolitan", email: "WSLHD-Recruitment@health.nsw.gov.au", health_service: "Western Sydney LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bacchus Marsh & Melton Regional Hospital (Djerriwarrh Health Services)", location: "Bacchus Marsh, VIC", type: "Regional", email: "careers@wh.org.au", health_service: "Western Health", contact: "", role: "", source: "MedRecruit" },
@@ -43,120 +45,120 @@ const MEDRECRUIT_HOSPITALS: Prospect[] = [
   { hospital: "Grampians Health - Ballarat Base Hospital", location: "Ballarat Central, VIC", type: "Regional/Base", email: "careers@gh.org.au", health_service: "Grampians Health", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Ballina District Hospital", location: "Ballina, NSW", type: "District", email: "NNSWLHD-CandidateExperienceTeam@health.nsw.gov.au", health_service: "Northern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bankstown-Lidcombe Hospital", location: "Bankstown, NSW", type: "Metropolitan", email: "SWSLHD-ESU@health.nsw.gov.au", health_service: "South Western Sydney LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "South East Regional Hospital / Batemans Bay District Hospital", location: "Batemans Bay, NSW", type: "District", email: "SNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "South East Regional Hospital / Batemans Bay District Hospital", location: "Batemans Bay, NSW", type: "District", email: "SNSWLHD-JMO@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bathurst Base Hospital", location: "Bathurst, NSW", type: "Base/Regional", email: "WNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Western NSW LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Flinders Medical Centre", location: "Bedford Park, SA", type: "Tertiary/Teaching", email: "Health.SALHNMedicalWorkforce@sa.gov.au", health_service: "Southern Adelaide LHN", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Bellingen River District Hospital", location: "Bellingen, NSW", type: "Rural/District", email: "MNCLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Belmont District Hospital", location: "Belmont, NSW", type: "District", email: "HNELHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Flinders Medical Centre", location: "Bedford Park, SA", type: "Tertiary/Teaching", email: "HealthTMOUHumanResources@sa.gov.au", health_service: "Southern Adelaide LHN", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Bellingen River District Hospital", location: "Bellingen, NSW", type: "Rural/District", email: "MNCLHD-JMOUnit@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Belmont District Hospital", location: "Belmont, NSW", type: "District", email: "HNELHD-JMOUnit@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bendigo Hospital (Bendigo Health)", location: "Bendigo, VIC", type: "Regional", email: "careers@bendigohealth.org.au", health_service: "Bendigo Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Riverland General Hospital", location: "Berri, SA", type: "Regional", email: "Health.RMCLHNAdmin@sa.gov.au", health_service: "Riverland Mallee Coorong LHN", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Riverland General Hospital", location: "Berri, SA", type: "Regional", email: "Health.RMCLHNMedicalWorkforce@sa.gov.au", health_service: "Riverland Mallee Coorong LHN", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bowen Hospital", location: "Bowen, QLD", type: "Rural", email: "MHHS-Medical-Workforce@health.qld.gov.au", health_service: "Mackay HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bowral & District Hospital", location: "Bowral, NSW", type: "District", email: "SWSLHD-ESU@health.nsw.gov.au", health_service: "South Western Sydney LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Box Hill Hospital (Eastern Health)", location: "Box Hill, VIC", type: "Metropolitan/Teaching", email: "careers@easternhealth.org.au", health_service: "Eastern Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Broken Hill Base Hospital", location: "Broken Hill, NSW", type: "Base/Regional", email: "FWLHD-Recruitment@health.nsw.gov.au", health_service: "Far West LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Broome Hospital", location: "Broome, WA", type: "Regional", email: "WACHS.KimberleyHR@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Calvary Public Hospital Bruce", location: "Bruce, ACT", type: "Metropolitan", email: "recruitment@calvarycare.org.au", health_service: "Calvary Health Care", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Bunbury Hospital (South West Health Campus)", location: "Bunbury, WA", type: "Regional", email: "WACHS.SouthWestHR@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Box Hill Hospital (Eastern Health)", location: "Box Hill, VIC", type: "Metropolitan/Teaching", email: "docsgoeast@easternhealth.org.au", health_service: "Eastern Health", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Broken Hill Base Hospital", location: "Broken Hill, NSW", type: "Base/Regional", email: "FWLHD-HR@health.nsw.gov.au", health_service: "Far West LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Broome Hospital", location: "Broome, WA", type: "Regional", email: "WACHSDoctors.Junior@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Calvary Public Hospital Bruce", location: "Bruce, ACT", type: "Metropolitan", email: "careers@calvarycare.org.au", health_service: "Calvary Health Care", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Bunbury Hospital (South West Health Campus)", location: "Bunbury, WA", type: "Regional", email: "WACHSDoctors.Junior@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bundaberg Hospital", location: "Bundaberg, QLD", type: "Regional", email: "WBHHS-Recruitment@health.qld.gov.au", health_service: "Wide Bay HHS", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "North West Regional Hospital", location: "Burnie, TAS", type: "Regional", email: "recruitment@ths.tas.gov.au", health_service: "Tasmanian Health Service", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "North West Regional Hospital", location: "Burnie, TAS", type: "Regional", email: "recruitment@health.tas.gov.au", health_service: "Tasmanian Health Service", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Byron Central Hospital", location: "Byron Central, NSW", type: "District", email: "NNSWLHD-CandidateExperienceTeam@health.nsw.gov.au", health_service: "Northern NSW LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Cairns Hospital", location: "Cairns North, QLD", type: "Regional/Tertiary", email: "CHHHS-MedicalWorkforce@health.qld.gov.au", health_service: "Cairns & Hinterland HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Cairns Hospital", location: "Cairns North, QLD", type: "Regional/Tertiary", email: "CHHHS_RMO_Recruitment@health.qld.gov.au", health_service: "Cairns & Hinterland HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Hawke's Bay Fallen Soldiers' Memorial Hospital", location: "Camberley, North Island NZ", type: "Regional", email: "sandra.bee@hbdhb.govt.nz", health_service: "Te Whatu Ora - Hawke's Bay", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Campbelltown Hospital", location: "Campbelltown, NSW", type: "Metropolitan", email: "SWSLHD-ESU@health.nsw.gov.au", health_service: "South Western Sydney LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Canberra Hospital (The)", location: "Canberra, ACT", type: "Tertiary/Teaching", email: "CHS.MedicalRecruitment@act.gov.au", health_service: "Canberra Health Services", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Sutherland Hospital", location: "Caringbah, NSW", type: "Metropolitan", email: "SESLHD-MedicalWorkforceUnit@health.nsw.gov.au", health_service: "South Eastern Sydney LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Canberra Hospital (The)", location: "Canberra, ACT", type: "Tertiary/Teaching", email: "CHSHR@act.gov.au", health_service: "Canberra Health Services", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Sutherland Hospital", location: "Caringbah, NSW", type: "Metropolitan", email: "SESLHD-MedicalRecruitment@health.nsw.gov.au", health_service: "South Eastern Sydney LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Casino and District Memorial Hospital", location: "Casino, NSW", type: "Rural", email: "NNSWLHD-CandidateExperienceTeam@health.nsw.gov.au", health_service: "Northern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Christchurch Hospital (Te Whatu Ora)", location: "Christchurch, South Island NZ", type: "Tertiary/Teaching", email: "careers@cdhb.health.nz", health_service: "Te Whatu Ora - Canterbury", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Coffs Harbour Base Hospital", location: "Coffs Harbour, NSW", type: "Base/Regional", email: "MNCLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Concord Repatriation General Hospital", location: "Concord, NSW", type: "Metropolitan/Teaching", email: "SLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Sydney LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Coffs Harbour Base Hospital", location: "Coffs Harbour, NSW", type: "Base/Regional", email: "MNCLHD-JMOUnit@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Concord Repatriation General Hospital", location: "Concord, NSW", type: "Metropolitan/Teaching", email: "SLHD-JMOUnit@health.nsw.gov.au", health_service: "Sydney LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Rockingham General Hospital", location: "Cooloongup, WA", type: "Metropolitan", email: "RKPG.Recruitment@health.wa.gov.au", health_service: "Rockingham Peel Group", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Cooma District Hospital", location: "Cooma, NSW", type: "District", email: "SNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Cooma District Hospital", location: "Cooma, NSW", type: "District", email: "SNSWLHD-JMO@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Tweed Hospital (The Tweed)", location: "Cudgen, NSW", type: "Regional", email: "NNSWLHD-CandidateExperienceTeam@health.nsw.gov.au", health_service: "Northern NSW LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Dorrigo Multi-Purpose Service", location: "Dorrigo, NSW", type: "Rural/MPS", email: "MNCLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Townsville University Hospital", location: "Douglas, QLD", type: "Tertiary/Teaching", email: "THHS-MedicalWorkforce@health.qld.gov.au", health_service: "Townsville HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Dorrigo Multi-Purpose Service", location: "Dorrigo, NSW", type: "Rural/MPS", email: "MNCLHD-JMOUnit@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Townsville University Hospital", location: "Douglas, QLD", type: "Tertiary/Teaching", email: "TCHHS-MedicalRecruitment@health.qld.gov.au", health_service: "Townsville HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Dubbo Base Hospital", location: "Dubbo, NSW", type: "Base/Regional", email: "WNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Western NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Dunedin Hospital (Te Whatu Ora Southern)", location: "Dunedin, South Island NZ", type: "Tertiary/Teaching", email: "rmo.recruitment@southerndhb.govt.nz", health_service: "Te Whatu Ora - Southern", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Maitland Hospital", location: "East Maitland, NSW", type: "Regional", email: "HNELHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Wollongong Hospital", location: "Figtree, NSW", type: "Regional/Teaching", email: "ISLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Maitland Hospital", location: "East Maitland, NSW", type: "Regional", email: "HNELHD-JMOUnit@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Wollongong Hospital", location: "Figtree, NSW", type: "Regional/Teaching", email: "ISLHD-JMOUnit@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Northern Beaches Hospital", location: "Frenches Forest, NSW", type: "Metropolitan", email: "enquiries@northernbeacheshospital.com.au", health_service: "Northern Sydney LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Gin Gin Hospital", location: "Gin Gin, QLD", type: "Rural", email: "WBHHS-Recruitment@health.qld.gov.au", health_service: "Wide Bay HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Gisborne Hospital (Hauora Tairāwhiti)", location: "Gisborne, North Island NZ", type: "Regional", email: "Communications@tdh.org.nz", health_service: "Hauora Tairāwhiti", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Gladstone Hospital", location: "Gladstone, QLD", type: "Regional", email: "CQHHS-Recruitment@health.qld.gov.au", health_service: "Central QLD HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Gladstone Hospital", location: "Gladstone, QLD", type: "Regional", email: "CQHHS_MedicalRecruitment@health.qld.gov.au", health_service: "Central QLD HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Gosford Hospital", location: "Gosford, NSW", type: "Regional/Teaching", email: "CCLHD-MWEUJMORecruit@health.nsw.gov.au", health_service: "Central Coast LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Goulburn Base Hospital", location: "Goulburn, NSW", type: "Base", email: "SNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Goulburn Base Hospital", location: "Goulburn, NSW", type: "Base", email: "SNSWLHD-JMO@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Grafton Base Hospital", location: "Grafton, NSW", type: "Base", email: "NNSWLHD-CandidateExperienceTeam@health.nsw.gov.au", health_service: "Northern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Griffith Base Hospital", location: "Griffith, NSW", type: "Base", email: "mlhd-griffith-dms@health.nsw.gov.au", health_service: "Murrumbidgee LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Waikato Hospital", location: "Hamilton, North Island NZ", type: "Tertiary/Teaching", email: "recruitment@waikatodhb.health.nz", health_service: "Te Whatu Ora - Waikato", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Wyong Hospital", location: "Hamlyn Terrace, NSW", type: "Regional", email: "CCLHD-MWEUJMORecruit@health.nsw.gov.au", health_service: "Central Coast LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Hornsby Ku-ring-gai Hospital", location: "Hornsby, NSW", type: "Metropolitan", email: "NSLHD-EmployeeServices@health.nsw.gov.au", health_service: "Northern Sydney LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Innisfail Hospital", location: "Innisfail, QLD", type: "Rural/Regional", email: "CHHHS-MedicalWorkforce@health.qld.gov.au", health_service: "Cairns & Hinterland HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Innisfail Hospital", location: "Innisfail, QLD", type: "Rural/Regional", email: "CHHHS_RMO_Recruitment@health.qld.gov.au", health_service: "Cairns & Hinterland HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Southland Hospital", location: "Invercargill, South Island NZ", type: "Regional", email: "rmo.recruitment@southerndhb.govt.nz", health_service: "Te Whatu Ora - Southern", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Joondalup Health Campus", location: "Joondalup, WA", type: "Metropolitan", email: "recruitment@ramsayhealth.com.au", health_service: "Ramsay Health Care", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Joondalup Health Campus", location: "Joondalup, WA", type: "Metropolitan", email: "careers@ramsayhealth.com.au", health_service: "Ramsay Health Care", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Kaitaia Hospital", location: "Kaitaia, North Island NZ", type: "Rural", email: "SMO.Jobs@northlanddhb.org.nz", health_service: "Te Whatu Ora - Northland", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Kalgoorlie Health Campus", location: "Kalgoorlie, WA", type: "Regional", email: "WACHS.GoldfieldsHR@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Kalgoorlie Health Campus", location: "Kalgoorlie, WA", type: "Regional", email: "WACHSDoctors.Junior@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bay of Islands Hospital", location: "Kawakawa, North Island NZ", type: "Rural", email: "SMO.Jobs@northlanddhb.org.nz", health_service: "Te Whatu Ora - Northland", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Kempsey District Hospital", location: "Kempsey, NSW", type: "District", email: "MNCLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Kempsey District Hospital", location: "Kempsey, NSW", type: "District", email: "MNCLHD-JMOUnit@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "St George Hospital", location: "Kogarah, NSW", type: "Metropolitan/Teaching", email: "SESLHD-MedicalWorkforceUnitSTG@health.nsw.gov.au", health_service: "South Eastern Sydney LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Latrobe Community Health Service / Mersey Community", location: "Latrobe, TAS", type: "Regional", email: "recruitment@ths.tas.gov.au", health_service: "Tasmanian Health Service", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Launceston General Hospital", location: "Launceston, TAS", type: "Regional/Teaching", email: "recruitment@ths.tas.gov.au", health_service: "Tasmanian Health Service", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Latrobe Community Health Service / Mersey Community", location: "Latrobe, TAS", type: "Regional", email: "recruitment@health.tas.gov.au", health_service: "Tasmanian Health Service", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Launceston General Hospital", location: "Launceston, TAS", type: "Regional/Teaching", email: "recruitment@health.tas.gov.au", health_service: "Tasmanian Health Service", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Leongatha Memorial Hospital (Gippsland Southern Health)", location: "Leongatha, VIC", type: "Rural", email: "info@gshs.com.au", health_service: "Gippsland Southern Health Service", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Lismore Base Hospital", location: "Lismore, NSW", type: "Base/Regional", email: "NNSWLHD-CandidateExperienceTeam@health.nsw.gov.au", health_service: "Northern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Liverpool Hospital", location: "Liverpool, NSW", type: "Tertiary/Teaching", email: "SWSLHD-ESU@health.nsw.gov.au", health_service: "South Western Sydney LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Mackay Base Hospital", location: "Mackay, QLD", type: "Base/Regional", email: "MHHS-Medical-Workforce@health.qld.gov.au", health_service: "Mackay HHS", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Macksville District Hospital", location: "Macksville, NSW", type: "District", email: "MNCLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Macksville District Hospital", location: "Macksville, NSW", type: "District", email: "MNCLHD-JMOUnit@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Maclean District Hospital", location: "Maclean, NSW", type: "District", email: "NNSWLHD-CandidateExperienceTeam@health.nsw.gov.au", health_service: "Northern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Wairarapa Hospital", location: "Masterton, North Island NZ", type: "Regional", email: "kathy.lee@wairarapa.dhb.org.nz", health_service: "Te Whatu Ora - Wairarapa", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Royal Melbourne Hospital / The Alfred / St Vincent's Melbourne", location: "Melbourne, VIC", type: "Tertiary/Teaching", email: "medical.workforce@mh.org.au", health_service: "Melbourne Health", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Bacchus Marsh & Melton Regional Hospital", location: "Melton West, VIC", type: "Regional", email: "careers@wh.org.au", health_service: "Western Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "St John of God Midland Public Hospital", location: "Midland, WA", type: "Metropolitan", email: "recruitment.midland@sjog.org.au", health_service: "St John of God Health Care", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "St John of God Midland Public Hospital", location: "Midland, WA", type: "Metropolitan", email: "midland.medicaladmin@sjog.org.au", health_service: "St John of God Health Care", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Mildura Base Public Hospital", location: "Mildura, VIC", type: "Base/Regional", email: "feedback@mbph.org.au", health_service: "Mildura Base Public Hospital", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Milton-Ulladulla Hospital", location: "Milton, NSW", type: "Rural", email: "ISLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Moruya District Hospital", location: "Moruya, NSW", type: "District", email: "SNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Mount Gambier and Districts Health Service", location: "Mount Gambier, SA", type: "Regional", email: "Health.LCLHNAdmin@sa.gov.au", health_service: "Limestone Coast LHN", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Milton-Ulladulla Hospital", location: "Milton, NSW", type: "Rural", email: "ISLHD-JMOUnit@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Moruya District Hospital", location: "Moruya, NSW", type: "District", email: "SNSWLHD-JMO@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Mount Gambier and Districts Health Service", location: "Mount Gambier, SA", type: "Regional", email: "Health.LCLHNMedicalWorkforce@sa.gov.au", health_service: "Limestone Coast LHN", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Mudgee District Hospital", location: "Mudgee, NSW", type: "District", email: "WNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Western NSW LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Muswellbrook District Hospital", location: "Muswellbrook, NSW", type: "District", email: "HNELHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Nambour General Hospital", location: "Nambour, QLD", type: "Regional", email: "SCHHS-Recruitment@health.qld.gov.au", health_service: "Sunshine Coast HHS", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Nelson Hospital (Te Whatu Ora)", location: "Nelson, South Island NZ", type: "Regional", email: "hr@nmdhb.govt.nz", health_service: "Te Whatu Ora - Nelson Marlborough", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Muswellbrook District Hospital", location: "Muswellbrook, NSW", type: "District", email: "HNELHD-JMOUnit@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Nambour General Hospital", location: "Nambour, QLD", type: "Regional", email: "Recruitment-Sunshine-Coast@health.qld.gov.au", health_service: "Sunshine Coast HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Nelson Hospital (Te Whatu Ora)", location: "Nelson, South Island NZ", type: "Regional", email: "David.Greer@nmdhb.govt.nz", health_service: "Te Whatu Ora - Nelson Marlborough", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Taranaki Base Hospital", location: "New Plymouth, North Island NZ", type: "Base/Regional", email: "hr@tdhb.org.nz", health_service: "Te Whatu Ora - Taranaki", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "John Hunter Hospital", location: "Newcastle, NSW", type: "Tertiary/Teaching", email: "HNELHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Newman Hospital", location: "Newman, WA", type: "Remote/Rural", email: "WACHS.PilbaraHR@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "John Hunter Hospital", location: "Newcastle, NSW", type: "Tertiary/Teaching", email: "HNELHD-JMOUnit@health.nsw.gov.au", health_service: "Hunter New England LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Newman Hospital", location: "Newman, WA", type: "Remote/Rural", email: "WACHS-Pilbara.ExecutiveServices@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Nhill Hospital (West Wimmera Health Service)", location: "Nhill, VIC", type: "Rural", email: "intake@wwhs.net.au", health_service: "West Wimmera Health Service", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Shoalhaven District Memorial Hospital", location: "Nowra, NSW", type: "District/Regional", email: "ISLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Shoalhaven District Memorial Hospital", location: "Nowra, NSW", type: "District/Regional", email: "ISLHD-JMOUnit@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Orange Health Service (Orange Base Hospital)", location: "Orange, NSW", type: "Base/Regional", email: "WNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Western NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Palmerston North Hospital (MidCentral)", location: "Palmerston North, North Island NZ", type: "Regional/Teaching", email: "helen.manoharan@tewhatuora.govt.nz", health_service: "Te Whatu Ora - MidCentral", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Parkes District Hospital", location: "Parkes, NSW", type: "District", email: "WNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Western NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Nepean Hospital", location: "Penrith, NSW", type: "Metropolitan/Teaching", email: "NBMLHD-JMORecruitment@health.nsw.gov.au", health_service: "Nepean Blue Mountains LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Port Augusta Hospital", location: "Port Augusta, SA", type: "Regional", email: "Health.FUNLHNAdmin@sa.gov.au", health_service: "Flinders & Upper North LHN", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Port Lincoln Hospital", location: "Port Lincoln, SA", type: "Regional", email: "chsaptllincolnswitchboard@health.sa.gov.au", health_service: "Eyre & Far North LHN", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Port Augusta Hospital", location: "Port Augusta, SA", type: "Regional", email: "Health.FUNLHNMedicalWorkforce@sa.gov.au", health_service: "Flinders & Upper North LHN", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Port Lincoln Hospital", location: "Port Lincoln, SA", type: "Regional", email: "Health.FUNLHNMedicalWorkforce@sa.gov.au", health_service: "Eyre & Far North LHN", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Port Macquarie Base Hospital", location: "Port Macquarie, NSW", type: "Base/Regional", email: "MNCLHD-PMBH-HIRS@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Queanbeyan District Hospital", location: "Queanbeyan, NSW", type: "District", email: "SNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Robina Hospital (Gold Coast Health)", location: "Robina, QLD", type: "Metropolitan", email: "GCHHS-Recruitment@health.qld.gov.au", health_service: "Gold Coast HHS", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Rockhampton Hospital", location: "Rockhampton, QLD", type: "Regional", email: "CQHHS-Recruitment@health.qld.gov.au", health_service: "Central QLD HHS", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Roma Hospital", location: "Roma, QLD", type: "Rural/Regional", email: "SWHHS-Recruitment@health.qld.gov.au", health_service: "South West HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Queanbeyan District Hospital", location: "Queanbeyan, NSW", type: "District", email: "SNSWLHD-JMO@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Robina Hospital (Gold Coast Health)", location: "Robina, QLD", type: "Metropolitan", email: "gchmedicalworkforce@health.qld.gov.au", health_service: "Gold Coast HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Rockhampton Hospital", location: "Rockhampton, QLD", type: "Regional", email: "CQHHS_MedicalRecruitment@health.qld.gov.au", health_service: "Central QLD HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Roma Hospital", location: "Roma, QLD", type: "Rural/Regional", email: "SWHHS_MedicalRecruitment@health.qld.gov.au", health_service: "South West HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Rotorua Hospital (Lakes DHB)", location: "Rotorua, North Island NZ", type: "Regional", email: "vacancy@lakesdhb.govt.nz", health_service: "Te Whatu Ora - Lakes", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Sarina Hospital", location: "Sarina, QLD", type: "Rural", email: "sarina.admin@health.qld.gov.au", health_service: "Mackay HHS", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Shellharbour Hospital", location: "Shellharbour, NSW", type: "District", email: "ISLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Shellharbour Hospital", location: "Shellharbour, NSW", type: "District", email: "ISLHD-JMOUnit@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Royal Perth Hospital / Perth Children's Hospital precinct", location: "Shenton Park, WA", type: "Tertiary", email: "RPH.InfoCentre@health.wa.gov.au", health_service: "East Metropolitan Health Service", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Goulburn Valley Health (GV Health) - Shepparton", location: "Shepparton, VIC", type: "Regional", email: "medicalworkforce@gvhealth.org.au", health_service: "Goulburn Valley Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Ipswich Hospital / West Moreton Health", location: "South Ripley, QLD", type: "Regional", email: "SNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Goulburn Valley Health (GV Health) - Shepparton", location: "Shepparton, VIC", type: "Regional", email: "dlmedadmin@gvhealth.org.au", health_service: "Goulburn Valley Health", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Ipswich Hospital / West Moreton Health", location: "South Ripley, QLD", type: "Regional", email: "SNSWLHD-JMO@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "The Alfred Hospital / South Melbourne precinct", location: "Southbank, VIC", type: "Tertiary/Teaching", email: "medical.workforce@alfred.org.au", health_service: "Alfred Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Gold Coast University Hospital", location: "Southport, QLD", type: "Tertiary/Teaching", email: "GCHHS-Recruitment@health.qld.gov.au", health_service: "Gold Coast HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Gold Coast University Hospital", location: "Southport, QLD", type: "Tertiary/Teaching", email: "gchmedicalworkforce@health.qld.gov.au", health_service: "Gold Coast HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Sunshine Hospital (Western Health)", location: "St Albans, VIC", type: "Metropolitan", email: "careers@wh.org.au", health_service: "Western Health", contact: "", role: "", source: "MedRecruit" },
   { hospital: "The Alfred Hospital", location: "St Kilda, VIC", type: "Tertiary/Teaching", email: "medical.workforce@alfred.org.au", health_service: "Alfred Health", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Swan Hill District Health", location: "Swan Hill, VIC", type: "Rural/Regional", email: "hr@shdh.org.au", health_service: "Swan Hill District Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Manning Rural Referral Hospital", location: "Taree, NSW", type: "Rural Referral", email: "MNCLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Manning Rural Referral Hospital", location: "Taree, NSW", type: "Rural Referral", email: "MNCLHD-JMOUnit@health.nsw.gov.au", health_service: "Mid North Coast LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Taupo Hospital", location: "Taupo, North Island NZ", type: "Rural", email: "vacancy@lakesdhb.govt.nz", health_service: "Te Whatu Ora - Lakes", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Tauranga Hospital", location: "Tauranga, North Island NZ", type: "Regional", email: "medicalstaffrecruitment@bopdhb.govt.nz", health_service: "Te Whatu Ora - Bay of Plenty", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Timaru Hospital", location: "Timaru, South Island NZ", type: "Regional", email: "careers@scdhb.health.nz", health_service: "Te Whatu Ora - South Canterbury", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Timaru Hospital", location: "Timaru, South Island NZ", type: "Regional", email: "recruitment@scdhb.health.nz", health_service: "Te Whatu Ora - South Canterbury", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Tom Price Hospital", location: "Tom Price, WA", type: "Remote/Rural", email: "wachspb_tphadmin@health.wa.gov.au", health_service: "WA Country Health Service", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Latrobe Regional Hospital", location: "Traralgon West, VIC", type: "Regional", email: "inquiry@lrh.com.au", health_service: "Latrobe Regional Hospital", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Tully Hospital", location: "Tully, QLD", type: "Rural", email: "CHHHS-MedicalWorkforce@health.qld.gov.au", health_service: "Cairns & Hinterland HHS", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Tully Hospital", location: "Tully, QLD", type: "Rural", email: "CHHHS_RMO_Recruitment@health.qld.gov.au", health_service: "Cairns & Hinterland HHS", contact: "", role: "", source: "MedRecruit" },
   { hospital: "South Coast District Hospital", location: "Victor Harbor, SA", type: "District", email: "CHSASCDHAdministration@health.sa.gov.au", health_service: "Barossa Hills Fleurieu LHN", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Ipswich Hospital (West Moreton Health)", location: "Wacol, QLD", type: "Regional", email: "wmmedicalworkforce@health.qld.gov.au", health_service: "West Moreton Health", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Wagga Wagga Rural Referral Hospital", location: "Wagga Wagga, NSW", type: "Rural Referral", email: "mlhd-careers@health.nsw.gov.au", health_service: "Murrumbidgee LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Sydney Adventist Hospital / Hornsby Hospital precinct", location: "Wahroonga, NSW", type: "Metropolitan/Private", email: "enquiries@sah.org.au", health_service: "Sydney Adventist Hospital (Private)", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Northeast Health Wangaratta", location: "Wangaratta, VIC", type: "Regional", email: "medicalworkforce@nhw.org.au", health_service: "Northeast Health Wangaratta", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Calvary Mater Newcastle", location: "Waratah, NSW", type: "Metropolitan/Teaching", email: "recruitment@calvarycare.org.au", health_service: "Calvary Health Care", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Calvary Mater Newcastle", location: "Waratah, NSW", type: "Metropolitan/Teaching", email: "careers@calvarycare.org.au", health_service: "Calvary Health Care", contact: "", role: "", source: "MedRecruit" },
   { hospital: "West Gippsland Healthcare Group (Warragul Hospital)", location: "Warragul, VIC", type: "Regional", email: "info@wghg.com.au", health_service: "West Gippsland Healthcare Group", contact: "", role: "", source: "MedRecruit" },
   { hospital: "South West Healthcare - Warrnambool", location: "Warrnambool, VIC", type: "Regional", email: "careers@swh.net.au", health_service: "South West Healthcare", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Wellington Regional Hospital", location: "Wellington, North Island NZ", type: "Tertiary/Teaching", email: "rmo_recruitment@ccdhb.org.nz", health_service: "Te Whatu Ora - Capital & Coast", contact: "", role: "", source: "MedRecruit" },
@@ -165,10 +167,10 @@ const MEDRECRUIT_HOSPITALS: Prospect[] = [
   { hospital: "Whakatane Hospital", location: "Whakatane, North Island NZ", type: "Regional", email: "BP-careers@tewhatuora.govt.nz", health_service: "Te Whatu Ora - Bay of Plenty", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Hawkesbury District Health Service (Windsor)", location: "Windsor, NSW", type: "District", email: "NBMLHD-HawkesburyHospital@health.nsw.gov.au", health_service: "Nepean Blue Mountains LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Albury Wodonga Health - Wodonga Campus", location: "Wodonga, VIC", type: "Regional", email: "careers@awh.org.au", health_service: "Albury Wodonga Health", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Wollongong Hospital", location: "Wollongong, NSW", type: "Regional/Teaching", email: "ISLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Wollongong Hospital", location: "Wollongong, NSW", type: "Regional/Teaching", email: "ISLHD-JMOUnit@health.nsw.gov.au", health_service: "Illawarra Shoalhaven LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Woy Woy Hospital / Brisbane Waters Private Hospital", location: "Woy Woy, NSW", type: "District", email: "CCLHD-Feedback@health.nsw.gov.au", health_service: "Central Coast LHD", contact: "", role: "", source: "MedRecruit" },
   { hospital: "Wyong Hospital", location: "Wyong, NSW", type: "Regional", email: "CCLHD-MWEUJMORecruit@health.nsw.gov.au", health_service: "Central Coast LHD", contact: "", role: "", source: "MedRecruit" },
-  { hospital: "Young District Hospital", location: "Young, NSW", type: "District", email: "SNSWLHD-MedicalWorkforce@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
+  { hospital: "Young District Hospital", location: "Young, NSW", type: "District", email: "SNSWLHD-JMO@health.nsw.gov.au", health_service: "Southern NSW LHD", contact: "", role: "", source: "MedRecruit" },
 ];
 
 // ── Notion Hospital Prospective List ────────────────────────────────
@@ -245,6 +247,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   const [search, setSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<"all" | "MedRecruit" | "Notion" | "ACEM">("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [stateFilter, setStateFilter] = useState("all");
   const [selectedIdxs, setSelectedIdxs] = useState<Set<number>>(new Set());
   const [importing, setImporting] = useState(false);
   const [importedCount, setImportedCount] = useState(0);
@@ -255,6 +258,57 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   const [showEnrollDialog, setShowEnrollDialog] = useState(false);
   const [lastImportIds, setLastImportIds] = useState<{ hospitalIds: string[]; dealIds: string[] } | null>(null);
   const [undoing, setUndoing] = useState(false);
+
+  // Fetch prospect overrides — lets users edit email/contact/etc inline
+  // without modifying source code.
+  const { data: overrides = [] } = useQuery({
+    queryKey: ["prospect-overrides"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("prospect_overrides")
+        .select("*");
+      // If the table doesn't exist yet, silently return empty — migration not applied
+      if (error) return [] as {
+        hospital_name: string;
+        email: string | null;
+        contact: string | null;
+        role: string | null;
+        location: string | null;
+        type: string | null;
+      }[];
+      return data as {
+        hospital_name: string;
+        email: string | null;
+        contact: string | null;
+        role: string | null;
+        location: string | null;
+        type: string | null;
+      }[];
+    },
+  });
+
+  // Build override map for quick lookup by hospital name (case-insensitive)
+  const overrideMap = useMemo(() => {
+    const m = new Map<string, typeof overrides[number]>();
+    overrides.forEach((o) => m.set(o.hospital_name.toLowerCase(), o));
+    return m;
+  }, [overrides]);
+
+  // ALL_PROSPECTS merged with overrides
+  const prospectsWithOverrides = useMemo(() => {
+    return ALL_PROSPECTS.map((p) => {
+      const ov = overrideMap.get(p.hospital.toLowerCase());
+      if (!ov) return p;
+      return {
+        ...p,
+        email: ov.email ?? p.email,
+        contact: ov.contact ?? p.contact,
+        role: ov.role ?? p.role,
+        location: ov.location ?? p.location,
+        type: ov.type ?? p.type,
+      };
+    });
+  }, [overrideMap]);
 
   // Fetch pipeline stages for import
   const { data: stages = [] } = useQuery({
@@ -273,15 +327,15 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   // Get unique types for filter
   const uniqueTypes = useMemo(() => {
     const types = new Set<string>();
-    ALL_PROSPECTS.forEach((p) => {
+    prospectsWithOverrides.forEach((p) => {
       if (p.type) types.add(p.type);
     });
     return Array.from(types).sort();
-  }, []);
+  }, [prospectsWithOverrides]);
 
-  // Filtered list
-  const filtered = useMemo(() => {
-    let list = ALL_PROSPECTS.map((p, i) => ({ ...p, _idx: i }));
+  // Filtered list (without state filter — used for state breakdown counts)
+  const filteredExStateDim = useMemo(() => {
+    let list = prospectsWithOverrides.map((p, i) => ({ ...p, _idx: i }));
 
     if (sourceFilter !== "all") {
       list = list.filter((p) => p.source === sourceFilter);
@@ -303,12 +357,29 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
     }
 
     return list;
-  }, [search, sourceFilter, typeFilter]);
+  }, [prospectsWithOverrides, search, sourceFilter, typeFilter]);
+
+  // State counts (for dropdown & stratify pills)
+  const stateCounts = useMemo(() => {
+    return filteredExStateDim.reduce<Record<string, number>>((acc, p) => {
+      const s = extractState(p.location);
+      acc[s] = (acc[s] || 0) + 1;
+      return acc;
+    }, {});
+  }, [filteredExStateDim]);
+
+  // Apply state filter on top
+  const filtered = useMemo(() => {
+    if (stateFilter === "all") return filteredExStateDim;
+    return filteredExStateDim.filter(
+      (p) => extractState(p.location) === stateFilter
+    );
+  }, [filteredExStateDim, stateFilter]);
 
   // Counts
-  const totalCount = ALL_PROSPECTS.length;
-  const withEmail = ALL_PROSPECTS.filter((p) => p.email).length;
-  const alreadyInCrm = ALL_PROSPECTS.filter((p) => existingHospitalNames.has(p.hospital.toLowerCase())).length;
+  const totalCount = prospectsWithOverrides.length;
+  const withEmail = prospectsWithOverrides.filter((p) => p.email).length;
+  const alreadyInCrm = prospectsWithOverrides.filter((p) => existingHospitalNames.has(p.hospital.toLowerCase())).length;
   const selectableFiltered = filtered.filter((p) => !existingHospitalNames.has(p.hospital.toLowerCase()));
 
   // Selection helpers
@@ -353,7 +424,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   // Email selected prospects
   const handleEmailSelected = () => {
     const recipients = Array.from(selectedIdxs)
-      .map((idx) => ALL_PROSPECTS[idx])
+      .map((idx) => prospectsWithOverrides[idx])
       .filter((p) => p.email)
       .map((p) => ({ name: p.hospital, email: p.email }));
 
@@ -369,7 +440,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   // Show confirmation before importing
   const handleImportClick = () => {
     const toImport = Array.from(selectedIdxs)
-      .map((idx) => ALL_PROSPECTS[idx])
+      .map((idx) => prospectsWithOverrides[idx])
       .filter((p) => !existingHospitalNames.has(p.hospital.toLowerCase()));
 
     if (toImport.length === 0) {
@@ -384,7 +455,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   const handleImport = async () => {
     setShowConfirmImport(false);
     const toImport = Array.from(selectedIdxs)
-      .map((idx) => ALL_PROSPECTS[idx])
+      .map((idx) => prospectsWithOverrides[idx])
       .filter((p) => !existingHospitalNames.has(p.hospital.toLowerCase()));
 
     if (toImport.length === 0) {
@@ -492,11 +563,11 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
   };
 
   const selectedWithEmail = Array.from(selectedIdxs)
-    .map((idx) => ALL_PROSPECTS[idx])
+    .map((idx) => prospectsWithOverrides[idx])
     .filter((p) => p.email).length;
 
   const enrollRecipients = Array.from(selectedIdxs)
-    .map((idx) => ALL_PROSPECTS[idx])
+    .map((idx) => prospectsWithOverrides[idx])
     .filter((p) => p.email)
     .map((p) => ({
       entityType: "hospital" as const,
@@ -591,6 +662,29 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
               ))}
             </SelectContent>
           </Select>
+          <Select value={stateFilter} onValueChange={setStateFilter}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="All states" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All States</SelectItem>
+              {AU_STATES.map((s) => {
+                const count = stateCounts[s] || 0;
+                if (count === 0) return null;
+                return (
+                  <SelectItem key={s} value={s}>
+                    {s} ({count})
+                  </SelectItem>
+                );
+              })}
+              {stateCounts["NZ"] > 0 && (
+                <SelectItem value="NZ">NZ ({stateCounts["NZ"]})</SelectItem>
+              )}
+              {stateCounts["-"] > 0 && (
+                <SelectItem value="-">Unknown ({stateCounts["-"]})</SelectItem>
+              )}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex gap-2 items-center">
@@ -643,6 +737,65 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
             </>
           )}
         </div>
+      </div>
+
+      {/* Stratify by state pills */}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-muted-foreground">
+          Stratify by state:
+        </span>
+        <button
+          onClick={() => setStateFilter("all")}
+          className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+            stateFilter === "all"
+              ? "border-[#1F3A6A] bg-[#1F3A6A] text-white"
+              : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          All ({filteredExStateDim.length})
+        </button>
+        {AU_STATES.map((s) => {
+          const count = stateCounts[s] || 0;
+          if (count === 0) return null;
+          const active = stateFilter === s;
+          return (
+            <button
+              key={s}
+              onClick={() => setStateFilter(active ? "all" : s)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                active
+                  ? `${STATE_COLORS[s]} ring-2 ring-offset-1 ring-current`
+                  : `${STATE_COLORS[s]} hover:opacity-80`
+              }`}
+            >
+              {s} ({count})
+            </button>
+          );
+        })}
+        {stateCounts["NZ"] > 0 && (
+          <button
+            onClick={() => setStateFilter(stateFilter === "NZ" ? "all" : "NZ")}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+              stateFilter === "NZ"
+                ? `${STATE_COLORS["NZ"]} ring-2 ring-offset-1 ring-current`
+                : `${STATE_COLORS["NZ"]} hover:opacity-80`
+            }`}
+          >
+            NZ ({stateCounts["NZ"]})
+          </button>
+        )}
+        {stateCounts["-"] > 0 && (
+          <button
+            onClick={() => setStateFilter(stateFilter === "-" ? "all" : "-")}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+              stateFilter === "-"
+                ? `${STATE_COLORS["-"]} ring-2 ring-offset-1 ring-current`
+                : `${STATE_COLORS["-"]} hover:opacity-80`
+            }`}
+          >
+            Unknown ({stateCounts["-"]})
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -719,24 +872,43 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
                       <p className="text-[11px] text-muted-foreground mt-0.5">{row.health_service}</p>
                     )}
                   </div>
-                  <div className="w-[140px] text-xs text-muted-foreground truncate">{row.location || "—"}</div>
-                  <div className="w-[120px] text-xs text-muted-foreground truncate">{row.type || "—"}</div>
+                  <div className="w-[140px] text-xs text-muted-foreground truncate">
+                    <EditableProspectCell
+                      hospitalName={row.hospital}
+                      field="location"
+                      value={row.location || ""}
+                      onSaved={() => queryClient.invalidateQueries({ queryKey: ["prospect-overrides"] })}
+                      className="text-xs text-muted-foreground"
+                    />
+                  </div>
+                  <div className="w-[120px] text-xs text-muted-foreground truncate">
+                    <EditableProspectCell
+                      hospitalName={row.hospital}
+                      field="type"
+                      value={row.type || ""}
+                      onSaved={() => queryClient.invalidateQueries({ queryKey: ["prospect-overrides"] })}
+                      className="text-xs text-muted-foreground"
+                    />
+                  </div>
                   <div className="w-[130px] text-xs text-muted-foreground truncate">
-                    {row.contact || "—"}
+                    <EditableProspectCell
+                      hospitalName={row.hospital}
+                      field="contact"
+                      value={row.contact || ""}
+                      onSaved={() => queryClient.invalidateQueries({ queryKey: ["prospect-overrides"] })}
+                      className="text-xs text-muted-foreground"
+                    />
                     {row.role && <span className="block text-[10px] text-muted-foreground/70">{row.role}</span>}
                   </div>
-                  <div className="flex-1 min-w-[200px] text-xs text-muted-foreground truncate">
-                    {row.email ? (
-                      <a
-                        href={`mailto:${row.email}`}
-                        className="text-blue-600 hover:underline"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {row.email}
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground/50">—</span>
-                    )}
+                  <div className="flex-1 min-w-[200px] text-xs truncate">
+                    <EditableProspectCell
+                      hospitalName={row.hospital}
+                      field="email"
+                      value={row.email || ""}
+                      onSaved={() => queryClient.invalidateQueries({ queryKey: ["prospect-overrides"] })}
+                      linkify
+                      className="text-xs"
+                    />
                   </div>
                   <div className="w-[80px] flex justify-center gap-1">
                     {alreadyExists && hospitalNameToId?.get(row.hospital.toLowerCase()) && (
@@ -797,7 +969,7 @@ export default function ProspectsPage({ existingHospitalNames, hospitalNameToId 
               You are about to import{" "}
               <strong>
                 {Array.from(selectedIdxs)
-                  .map((idx) => ALL_PROSPECTS[idx])
+                  .map((idx) => prospectsWithOverrides[idx])
                   .filter((p) => !existingHospitalNames.has(p.hospital.toLowerCase())).length}{" "}
                 hospitals
               </strong>{" "}

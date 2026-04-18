@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { logActivity } from "../shared/logActivity";
 import { ComposeEmailDialog } from "../shared/components/ComposeEmailDialog";
 import type { Hospital, HospitalStatus, PipelineStage, HospitalDeal } from "../shared/types";
+import { AU_STATES, STATE_COLORS, extractState, setStateInNotes } from "../shared/australianStates";
 import PipelinePage from "./PipelinePage";
 import ProspectsPage from "./ProspectsPage";
 
@@ -570,56 +571,90 @@ function useHospitals(search: string, statusFilter: string) {
   });
 }
 
-function extractState(location: string | null): string {
-  if (!location) return "-";
-  // Match Australian state abbreviations at end of address (before ", Australia")
-  const match = location.match(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/);
-  return match ? match[1] : "-";
+
+function StateCell({
+  row,
+  onUpdate,
+}: {
+  row: HospitalWithStage;
+  onUpdate: (id: string, state: string) => void;
+}) {
+  const currentState = extractState(row.location, row.notes);
+  return (
+    <Select
+      value={currentState}
+      onValueChange={(v) => onUpdate(row.id, v)}
+    >
+      <SelectTrigger
+        className={`h-7 w-[90px] rounded-full border px-2.5 py-0 text-xs font-semibold focus:ring-0 focus:ring-offset-0 ${STATE_COLORS[currentState] || STATE_COLORS["-"]}`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent onClick={(e) => e.stopPropagation()}>
+        {AU_STATES.map((s) => (
+          <SelectItem key={s} value={s}>
+            {s}
+          </SelectItem>
+        ))}
+        <SelectItem value="NZ">NZ</SelectItem>
+        <SelectItem value="-">Unknown</SelectItem>
+      </SelectContent>
+    </Select>
+  );
 }
 
-const columns: Column<HospitalWithStage>[] = [
-  {
-    key: "name",
-    header: "Hospital",
-    render: (row) => (
-      <div>
-        <div className="font-medium">{row.name}</div>
-        {row.contact_name && <div className="text-xs text-muted-foreground">{row.contact_name}</div>}
-      </div>
-    ),
-  },
-  {
-    key: "status",
-    header: "Status",
-    render: (row) => <StatusBadge status={row.status} />,
-  },
-  {
-    key: "location",
-    header: "State",
-    render: (row) => extractState(row.location),
-  },
-  {
-    key: "contact_email",
-    header: "Contact Email",
-    render: (row) => row.contact_email ? (
-      <span className="text-sm">{row.contact_email}</span>
-    ) : "-",
-  },
-  {
-    key: "pipeline_stage" as any,
-    header: "Pipeline",
-    render: (row: HospitalWithStage) => row.pipeline_stage ? (
-      <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-        {row.pipeline_stage}
-      </span>
-    ) : "-",
-  },
-  {
-    key: "created_at",
-    header: "Added",
-    render: (row) => new Date(row.created_at).toLocaleDateString(),
-  },
-];
+function buildColumns(
+  onUpdateState: (id: string, state: string) => void
+): Column<HospitalWithStage>[] {
+  return [
+    {
+      key: "name",
+      header: "Hospital",
+      render: (row) => (
+        <div>
+          <div className="font-medium">{row.name}</div>
+          {row.contact_name && (
+            <div className="text-xs text-muted-foreground">{row.contact_name}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (row) => <StatusBadge status={row.status} />,
+    },
+    {
+      key: "location",
+      header: "State",
+      render: (row) => <StateCell row={row} onUpdate={onUpdateState} />,
+    },
+    {
+      key: "contact_email",
+      header: "Contact Email",
+      render: (row) =>
+        row.contact_email ? <span className="text-sm">{row.contact_email}</span> : "-",
+    },
+    {
+      key: "pipeline_stage" as any,
+      header: "Pipeline",
+      render: (row: HospitalWithStage) =>
+        row.pipeline_stage ? (
+          <span className="inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
+            {row.pipeline_stage}
+          </span>
+        ) : (
+          "-"
+        ),
+    },
+    {
+      key: "created_at",
+      header: "Added",
+      render: (row) => new Date(row.created_at).toLocaleDateString(),
+    },
+  ];
+}
 
 // ── Bulk Import ────────────────────────────────────────────────────
 
@@ -900,16 +935,61 @@ export default function HospitalsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [stateFilter, setStateFilter] = useState("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkImport, setShowBulkImport] = useState(false);
   const [showBulkEmail, setShowBulkEmail] = useState(false);
   const [activeTab, setActiveTab] = useState("pipeline");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const { data: hospitals = [], isLoading } = useHospitals(search, statusFilter);
+  const { data: allHospitals = [], isLoading } = useHospitals(search, statusFilter);
+
+  // State breakdown computed from all hospitals matching search/status (before state filter)
+  const stateCounts = allHospitals.reduce<Record<string, number>>((acc, h) => {
+    const s = extractState(h.location, h.notes);
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+
+  // Apply state filter client-side
+  const hospitals =
+    stateFilter === "all"
+      ? allHospitals
+      : allHospitals.filter(
+          (h) => extractState(h.location, h.notes) === stateFilter
+        );
+
+  // Mutation to update a hospital's state (stored as a tag in notes)
+  const updateHospitalState = useMutation({
+    mutationFn: async ({ id, state }: { id: string; state: string }) => {
+      const { data: current, error: readErr } = await supabase
+        .from("hospitals")
+        .select("notes")
+        .eq("id", id)
+        .single();
+      if (readErr) throw readErr;
+      const newNotes = setStateInNotes(current?.notes, state);
+      const { error } = await supabase
+        .from("hospitals")
+        .update({ notes: newNotes, updated_at: new Date().toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["hospitals"] });
+      toast.success("State updated");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const handleUpdateState = (id: string, state: string) => {
+    updateHospitalState.mutate({ id, state });
+  };
+
+  const columns = buildColumns(handleUpdateState);
 
   const hospitalMap = new Map(hospitals.map((h) => [h.id, h]));
-  const existingHospitalNames = new Set(hospitals.map((h) => h.name.toLowerCase()));
+  const existingHospitalNames = new Set(allHospitals.map((h) => h.name.toLowerCase()));
 
   const bulkConfig = {
     entityName: "hospital",
@@ -1031,7 +1111,11 @@ export default function HospitalsPage() {
     <div>
       <PageHeader
         title="Hospitals"
-        description={`${hospitals.length} hospital${hospitals.length !== 1 ? "s" : ""} total`}
+        description={
+          stateFilter !== "all"
+            ? `${hospitals.length} hospital${hospitals.length !== 1 ? "s" : ""} in ${stateFilter} · ${allHospitals.length} total`
+            : `${allHospitals.length} hospital${allHospitals.length !== 1 ? "s" : ""} total`
+        }
         actionLabel="Add Hospital"
         onAction={() => setShowAddDialog(true)}
         extraActions={
@@ -1082,6 +1166,71 @@ export default function HospitalsPage() {
                 <SelectItem value="churned">Churned</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={stateFilter} onValueChange={setStateFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="All states" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All states</SelectItem>
+                {AU_STATES.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s} {stateCounts[s] ? `(${stateCounts[s]})` : ""}
+                  </SelectItem>
+                ))}
+                {stateCounts["-"] > 0 && (
+                  <SelectItem value="-">Unknown ({stateCounts["-"]})</SelectItem>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* State breakdown pills — click to filter */}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">
+              Stratify by state:
+            </span>
+            <button
+              onClick={() => setStateFilter("all")}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                stateFilter === "all"
+                  ? "border-[#1F3A6A] bg-[#1F3A6A] text-white"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+              }`}
+            >
+              All ({allHospitals.length})
+            </button>
+            {AU_STATES.map((s) => {
+              const count = stateCounts[s] || 0;
+              if (count === 0) return null;
+              const active = stateFilter === s;
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStateFilter(active ? "all" : s)}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                    active
+                      ? `${STATE_COLORS[s]} ring-2 ring-offset-1 ring-current`
+                      : `${STATE_COLORS[s]} hover:opacity-80`
+                  }`}
+                >
+                  {s} ({count})
+                </button>
+              );
+            })}
+            {stateCounts["-"] > 0 && (
+              <button
+                onClick={() =>
+                  setStateFilter(stateFilter === "-" ? "all" : "-")
+                }
+                className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                  stateFilter === "-"
+                    ? `${STATE_COLORS["-"]} ring-2 ring-offset-1 ring-current`
+                    : `${STATE_COLORS["-"]} hover:opacity-80`
+                }`}
+              >
+                Unknown ({stateCounts["-"]})
+              </button>
+            )}
           </div>
 
           <BulkActionsToolbar
@@ -1091,7 +1240,7 @@ export default function HospitalsPage() {
             totalCount={hospitals.length}
           />
 
-          {!isLoading && hospitals.length === 0 && !search && statusFilter === "all" ? (
+          {!isLoading && hospitals.length === 0 && !search && statusFilter === "all" && stateFilter === "all" ? (
             <EmptyState
               icon={Building2}
               title="No hospitals yet"
